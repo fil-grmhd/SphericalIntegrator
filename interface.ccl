@@ -1,0 +1,197 @@
+# Interface definition for thorn SphericalSlice
+
+USES INCLUDE: vect.hh
+USES INCLUDE: carpetinterp2.hh
+
+implements: SphericalSlice
+inherits: grid
+
+INCLUDE HEADER: slices.hh in spherical_slices.hh
+INCLUDE HEADER: IO/io_hdf5.h in io_hdf5.h
+
+
+# Get current refinement level
+CCTK_INT FUNCTION GetRefinementLevel (CCTK_POINTER_TO_CONST IN cctkGH)
+USES FUNCTION GetRefinementLevel
+
+
+# Specify whether multipatch supports Thornburg04 6-patch system
+CCTK_INT FUNCTION             \
+    MultiPatch_ProvidesThornburg04 \
+            ()
+USES FUNCTION MultiPatch_ProvidesThornburg04
+
+
+# Get inner radius of angular patches
+CCTK_INT FUNCTION             \
+    MultiPatch_GetInnerRadius \
+            ()
+USES FUNCTION MultiPatch_GetInnerRadius
+
+CCTK_INT FUNCTION                          \
+    MultiPatch_GetDomainSpecification      \
+        (CCTK_INT IN map,                  \
+         CCTK_INT IN size,                 \
+         CCTK_REAL OUT ARRAY physical_min, \
+         CCTK_REAL OUT ARRAY physical_max, \
+         CCTK_REAL OUT ARRAY interior_min, \
+         CCTK_REAL OUT ARRAY interior_max, \
+         CCTK_REAL OUT ARRAY exterior_min, \
+         CCTK_REAL OUT ARRAY exterior_max, \
+         CCTK_REAL OUT ARRAY spacing)
+USES FUNCTION MultiPatch_GetDomainSpecification \
+    
+
+PUBLIC:
+
+
+# Register a Cactus variable for being sliced and return registration number
+CCTK_INT FUNCTION \
+    SphericalSlice_RegisterVariable \
+         (CCTK_POINTER_TO_CONST IN varname, \
+	  CCTK_INT IN sn, \
+	  CCTK_INT IN timelevels, \
+	  CCTK_POINTER_TO_CONST IN distrib_method)
+PROVIDES FUNCTION SphericalSlice_RegisterVariable \
+    WITH SphericalSlice_Register \
+    LANGUAGE C
+
+
+# Return Surface-Integral over sliced variable. 
+CCTK_REAL FUNCTION \
+    SphericalSlice_IntegrateVariable \
+         (CCTK_INT IN varno, \
+	  CCTK_INT IN timelevel)
+PROVIDES FUNCTION SphericalSlice_IntegrateVariable \
+    WITH SphericalSlice_Integrate \
+    LANGUAGE C
+
+
+
+# Return value of scalar product with spin-weighted spherical harmonics sYlm 
+CCTK_COMPLEX FUNCTION \
+    SphericalSlice_ContractVariableWithsYlm \
+         (CCTK_INT IN varno, \
+	  CCTK_INT IN timelevel, \
+	  CCTK_INT IN s, \
+	  CCTK_INT IN l, \
+	  CCTK_INT IN m)
+PROVIDES FUNCTION SphericalSlice_ContractVariableWithsYlm \
+    WITH SphericalSlice_ContractWithsYlm \
+    LANGUAGE C
+
+
+# Return an array of all values of scalar product with all spin-weighted spherical harmonics sYlm up to lmax 
+CCTK_INT FUNCTION \
+    SphericalSlice_ContractVariableWithAllsYlm \
+         (CCTK_INT IN varno, \
+	  CCTK_INT IN timelevel, \
+	  CCTK_INT IN s, \
+	  CCTK_INT IN lmin, \
+	  CCTK_INT IN lmax, \
+	  CCTK_COMPLEX OUT ARRAY coeffs)
+PROVIDES FUNCTION SphericalSlice_ContractVariableWithAllsYlm \
+    WITH SphericalSlice_ContractWithAllsYlm \
+    LANGUAGE C
+
+
+
+# Synchronzie slice, i.e. interpolate onto sphere
+CCTK_INT FUNCTION \
+    SphericalSlice_SyncVariable \
+         (CCTK_POINTER_TO_CONST IN cctkGH_, \
+	  CCTK_INT IN varno)
+PROVIDES FUNCTION SphericalSlice_SyncVariable \
+    WITH SphericalSlice_Sync \
+    LANGUAGE C
+
+
+# Synchronzie slice, i.e. interpolate a whole set of variables on the same slice
+CCTK_INT FUNCTION \
+    SphericalSlice_CollectiveSyncVariables \
+         (CCTK_POINTER_TO_CONST IN cctkGH_, \
+	  CCTK_POINTER_TO_CONST IN varno, \
+	  CCTK_INT IN number_of_vars)
+PROVIDES FUNCTION SphericalSlice_CollectiveSyncVariables \
+    WITH SphericalSlice_CollectiveSync \
+    LANGUAGE C
+
+
+
+
+# To be defined by the setting thorn.
+# Suggested meanings:
+# zero: The surface data are invalid (garbage)
+# one:  The surface data are valid in principle, although they may be outdated
+CCTK_INT ss_active[nslices] TYPE=scalar
+
+# To be defined by the setting thorn.
+# Suggested meanings:
+# zero:     No surface is provided at this time step
+# negative: No surface could be found at this time step
+# positive: The surface data are valid
+CCTK_INT ss_valid[nslices] TYPE=scalar
+
+# A variable storing the slice ID of the associated
+# radius function
+CCTK_INT ss_radius_id[nslices] TYPE=scalar
+
+
+CCTK_REAL ss_info[nslices] TYPE=scalar
+{
+  # The following are covariant quantities:
+
+  # proper area:
+  #    A := int(S) sqrt(q) dS
+  #    with q_ij the 2-metric on the surface
+  ss_area
+
+
+
+  # The following are coordinate-dependent quantities:
+
+  # monopole moment (average coordinate radius):
+  #    M := int(S) h ds / A
+  ss_mean_radius
+
+  # dipole moment:
+  #    D^i := int(S) x^i dS / A
+  ss_centroid_x ss_centroid_y ss_centroid_z
+
+  # quadrupole moment:
+  #    Q^ij := int(S) y^i y^j dS / A   with y^i := x^i - D^i
+  ss_quadrupole_xx ss_quadrupole_xy ss_quadrupole_xz
+  ss_quadrupole_yy ss_quadrupole_yz ss_quadrupole_zz
+
+
+
+  # minimum and maximum coordinate radius
+  ss_min_radius ss_max_radius
+
+  # bounding box
+  ss_min_x ss_min_y ss_min_z ss_max_x ss_max_y ss_max_z
+  
+  ss_origin_x ss_origin_y ss_origin_z
+  
+} "Surface information"
+
+
+
+CCTK_INT ss_shape_descriptors[nslices] TYPE=scalar
+{
+  ss_ntheta, ss_nphi, ss_npatches
+} "The shape of the surfaces, ie. number of points per patch and number of patches"
+
+
+
+PRIVATE:
+
+
+CCTK_INT can_use_Llama[nslices] TYPE=scalar "Whether this slice can use Llama"
+CCTK_REAL new_radius[nslices] TYPE=scalar "A new radius according to the next closest radial Llama gridpoint"
+
+
+
+
+
+

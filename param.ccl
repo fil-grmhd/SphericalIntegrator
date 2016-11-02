@@ -1,0 +1,145 @@
+# Parameter definitions for thorn SphericalSlice
+
+
+RESTRICTED:
+
+
+CCTK_INT nslices "The number of different slices"
+{
+  0:42 :: "Any numer between 0 and 42"
+} 0
+
+
+KEYWORD type[42] "The patching of the slice"
+{
+  "1patch" :: "A patch with standard theta/phi coordinates"
+  "2patch" :: "A stereographic covering"
+  "6patch" :: "A 6-patch covering using Thornburg's coordinates"
+} "6patch"
+
+
+
+CCTK_INT ntheta[42] "The number of nominal angular points along theta direction (staggered for 1patch)"
+{
+  3:* :: "Any psoitive number larger than 3"
+} 30
+
+
+CCTK_INT nphi[42] "The number of nominal angular points along theta direction"
+{
+  3:* :: "Any psoitive number larger than 3"
+} 60
+
+
+CCTK_INT nghostzones[42] "The ghostzone width for both angular directions"
+{
+  0:* :: "Any positive number"
+} 0
+
+
+INT interpolator_order "Interpolation order" STEERABLE=recover
+{
+  0:11 :: "CarpetInterp2 can do 0 up to 11"
+} 4
+
+
+BOOLEAN autores[42] "Shall we determine the resolution according to the underlying grid?"
+{
+} no
+
+
+BOOLEAN precalc_sYlms "Whether to precalculate sYlm's and store them. Note that although speed-up might be significant if you have many variables to decompose, there will be storage necessary for lmax^2 additional arrays for each slice on each processor!" \
+  STEERABLE=recover
+{
+} no
+
+
+# Place a surfaces at a certain location
+
+CCTK_REAL origin_x[42] "Origin for surface" STEERABLE=always
+{
+  * :: "origin"
+} 0.0
+
+CCTK_REAL origin_y[42] "Origin for surface" STEERABLE=always
+{
+  * :: "origin"
+} 0.0
+
+CCTK_REAL origin_z[42] "Origin for surface" STEERABLE=always
+{
+  * :: "origin"
+} 0.0
+
+
+
+BOOLEAN set_spherical[42] "Place surface at a certain radius" STEERABLE=always
+{
+} no
+
+CCTK_REAL radius[42] "Radius for surface" STEERABLE=always
+{
+  * :: "radius"
+} 0.0
+
+
+
+BOOLEAN set_elliptic[42] "Place surface at a certain radius" STEERABLE=always
+{
+} no
+
+
+CCTK_REAL radius_x[42] "Radius for surface" STEERABLE=always
+{
+  * :: "radius"
+} 0.0
+
+CCTK_REAL radius_y[42] "Radius for surface" STEERABLE=always
+{
+  * :: "radius"
+} 0.0
+
+CCTK_REAL radius_z[42] "Radius for surface" STEERABLE=always
+{
+  * :: "radius"
+} 0.0
+
+
+
+BOOLEAN enforce_single_registration "If set to yes, this will allocate memory only once per slice and variable. It has the disadvantage that if some other thorn triggers a synchronization for the same slice and variable your results may get spoiled."
+{
+} no
+
+
+BOOLEAN use_carpet_interp1 "use carpet interp1 if you need proper accounting of symmetries and/or time interpolation"
+{
+} no
+
+
+#--------------------------------------------
+# Parameters that are only useful if Llama
+# is activated
+#--------------------------------------------
+
+BOOLEAN use_Llama[42] "Shall we take advantage of Llama if possible?"
+{
+} yes
+
+
+CCTK_INT stride[42] "The stride wrt Llama's angular resolution"
+{
+  1:* :: "Any psoitive number larger than 1"
+} 1
+
+
+BOOLEAN insist_on_radius[42] "Shall we take the given constant radius serious or shall we pick the next closest radius that lies on a Llama gridpoint?"
+{
+} no
+
+
+
+
+
+
+
+

@@ -1,0 +1,8 @@
+PROVIDES SphericalSlice
+{
+}
+
+REQUIRES Carpet HDF5 MPI
+
+REQUIRES THORNS: CarpetInterp2
+

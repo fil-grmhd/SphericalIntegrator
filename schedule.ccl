@@ -1,0 +1,70 @@
+# Schedule definitions for thorn SphericalSlice
+
+
+STORAGE: ss_active
+STORAGE: ss_valid
+STORAGE: ss_info
+STORAGE: ss_shape_descriptors
+STORAGE: ss_radius_id
+STORAGE: can_use_Llama
+STORAGE: new_radius
+
+
+SCHEDULE SphericalSlice_ParamCheck AT CCTK_PARAMCHECK
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Check parameter settings"
+
+
+# I cannot schedule this at BASEGRID because this routine must be called only at
+# at the very beginning of the simulation and not during recovery.
+SCHEDULE SphericalSlice_Setup AT INITIAL #BASEGRID
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Set up slices"
+
+
+
+SCHEDULE SphericalSlice_PostSetup AT INITIAL AFTER SphericalSlice_Setup  #BASEGRID AFTER SphericalSlice_Setup
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Post setup."
+
+
+SCHEDULE SphericalSlice_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_PostStep
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Post setup."
+
+
+
+
+
+SCHEDULE GROUP SphericalSlice_HasBeenSet AT INITIAL AFTER SphericalSlice_PostSetup
+{
+} "Set the spherical slices before this group and use them afterwards"
+
+
+SCHEDULE GROUP SphericalSlice_HasBeenSet AT POST_RECOVER_VARIABLES AFTER SphericalSlice_PostSetup BEFORE MoL_PostStep
+{
+} "Set the spherical slices before this group and use them afterwards"
+
+
+SCHEDULE GROUP SphericalSlice_HasBeenSet AT POSTSTEP
+{
+} "Set the spherical slices before this group and use them afterwards"
+
+
+
+
+
+SCHEDULE SphericalSlice_CheckAndUpdate IN SphericalSlice_HasBeenSet
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Check ss_info variables if those have been externally set and adapt internal variables accordingly."
+
