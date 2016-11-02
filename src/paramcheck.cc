@@ -29,13 +29,7 @@ extern "C" void SphericalSlice_ParamCheck(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
-   
-   for (int i=0; i < nslices; ++i)
-   {
-      if (CCTK_Equals(type[i], "2patch"))
-         CCTK_PARAMWARN("Currently we don't support 2-patch systems!");
-   }
-   
+
    if (enforce_single_registration)
    {
       CCTK_WARN(1, "Using \"enforce_single_registration=yes\"  may spoil your code! Use this only if you know what you are doing!");

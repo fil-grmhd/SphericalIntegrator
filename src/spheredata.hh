@@ -60,7 +60,7 @@ static const CCTK_REAL PI = 4.0*atan(1.0);
 // distribution method: constant: all processors conatin all the data
 //                      split:    the sphere is split across multiple processors
 //                      single:   only one processor contains the sphere
-enum distrib_method_t { constant, split, single };
+enum distrib_method_t { constant, split, single, undefined };
 
 
 /// conversion to C++ vector

@@ -28,13 +28,12 @@ template <class SD>
 int slices<SD>::register_slice(const string& varname, int const slice_parameter_no, int const timelevels, const distrib_method_t distrib_method)
             {
                DECLARE_CCTK_PARAMETERS
-               
                // shortcut
                const int sn = slice_parameter_no;
-               
+
                assert(slice_parameter_no < nslices);
                assert(timelevels > 0);
-               
+
                // check if slice is already registered...
                if (enforce_single_registration)
                {
@@ -51,25 +50,25 @@ int slices<SD>::register_slice(const string& varname, int const slice_parameter_
                      }
                   }
                }
-               
+
                _slice.resize(_slice.size()+1);
-               
+
                // number of current slice
                const int cs = _slice.size()-1;
-               
+
                vector<int> processors = get_processors(sn, distrib_method);
-               
+
                void* radii = NULL; // pointer to the data of radius function defined for the slice.
                if (varname != "ss_radius")
                {
                   // get pointer to slice that contains associated radius-function
-		  assert(sn < radius_pointers.size());
+		              assert(sn < radius_pointers.size());
                   radii = radius_pointers[sn];
                }
-               
+
                // set up new slice, get storage and distribute it
                // over a defined group of processors
-               SD sd(varname, sn, 
+               SD sd(varname, sn,
                      ntheta_internal[sn], nphi_internal[sn], nghostzones[sn],
                      radius_internal[sn], radii,
                      vect<CCTK_REAL,3>(origin_x[sn], origin_y[sn], origin_z[sn]),
@@ -78,11 +77,11 @@ int slices<SD>::register_slice(const string& varname, int const slice_parameter_
                      distrib_method,
                      processors,
                      can_use_Llama_internal[sn]);
-               
+
                // copy slice to past timelevels
                for (int i=0; i < timelevels; ++i)
                   _slice[cs].push_back(sd);
-               
+
                return _slice.size()-1;
             }
 

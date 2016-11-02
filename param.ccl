@@ -15,7 +15,7 @@ KEYWORD type[42] "The patching of the slice"
   "1patch" :: "A patch with standard theta/phi coordinates"
   "2patch" :: "A stereographic covering"
   "6patch" :: "A 6-patch covering using Thornburg's coordinates"
-} "6patch"
+} "1patch"
 
 
 

@@ -33,27 +33,13 @@ using namespace SPS;
 extern "C" CCTK_REAL SphericalSlice_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
 {
    DECLARE_CCTK_PARAMETERS
-   
+
    assert(timelevel >= 0);
    assert(varno >= 0);
-   
+
    CCTK_REAL result = 0;
-   
-   if (is_1patch(varno))
-   {
-      assert(INDEX1P(varno) < slices_1patch.slice().size());
-      result = slices_1patch(INDEX1P(varno), timelevel).integrate();
-   }
-   
-   if (is_2patch(varno))
-      CCTK_WARN(0, "Uh oh....the idea is good but the world isn't ready yet...");
-   
-   if (is_6patch(varno))
-   {
-      assert(INDEX6P(varno) < slices_6patch.slice().size());
-      result = slices_6patch(INDEX6P(varno), timelevel).integrate();
-   }
-   
+
+   assert(INDEX1P(varno) < slices_1patch.slice().size());
    // return the surface integral
-   return result;
+   return slices_1patch(INDEX1P(varno), timelevel).integrate();
 }

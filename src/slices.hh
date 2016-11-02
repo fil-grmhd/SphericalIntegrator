@@ -176,12 +176,8 @@ class slices
 
 /// all slices for 1patch, 2patch and 6patch systems. 
 extern slices<spheredata_1patch<CCTK_REAL> > slices_1patch;
-extern slices<spheredata_2patch<CCTK_REAL> > slices_2patch;
-extern slices<spheredata_6patch<CCTK_REAL> > slices_6patch;
 
 extern slices<spheredata_1patch<CCTK_REAL> > radius_1patch;
-extern slices<spheredata_2patch<CCTK_REAL> > radius_2patch;
-extern slices<spheredata_6patch<CCTK_REAL> > radius_6patch;
 
 /// some shortcuts
 typedef spheredata_1patch<CCTK_REAL>::integrator integrator_1patch;

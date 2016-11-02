@@ -38,42 +38,28 @@ extern "C" void SphericalSlice_CheckAndUpdate(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
-   
+
    for (int n=0; n < nslices; ++n)
    {
-      if (ss_valid[n] > 0 && ss_active[n] == 0) 
+      if (ss_valid[n] > 0 && ss_active[n] == 0)
       {
-   
-         CCTK_VWarn (CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+        CCTK_VWarn (CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
                      "Slice #%d has ss_valid set to a positive value, but does "
                      "not have ss_active set.  This is an error in the thorn "
                      "which calculated this surface", n);
-   
       }
    }
-   
    // go through all 1-patch slices and check and change most recent timelevel
    for (int j=0; j < slices_1patch.slice().size(); ++j)
    {
       int id = slices_1patch.slice()[j].front().ID(); // n-th slice in par-file
-      
+
       vect<CCTK_REAL,3> new_origin(ss_origin_x[id], ss_origin_y[id], ss_origin_z[id]);
       slices_1patch.slice()[j].front().origin() = new_origin;
    }
-   
-   
-   // go through all 6-patch slices and check and change most recent timelevel
-   for (int j=0; j < slices_6patch.slice().size(); ++j)
-   {
-      int id = slices_6patch.slice()[j].front().ID(); // n-th slice in par-file
-      
-      vect<CCTK_REAL,3> new_origin(ss_origin_x[id], ss_origin_y[id], ss_origin_z[id]);
-      slices_6patch.slice()[j].front().origin() = new_origin;
-   }
-   
+
    // TODO: also set other ss_info variables!
    //       But on the other hand calculating the surface area at each timestep might be expensive....
-   
 }
 
 
