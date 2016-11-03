@@ -104,7 +104,7 @@ class spheredata
             static int const npatches = 0;
             class iter;  // forward declaration
             class const_iter;  // forward declaration
-            
+
             spheredata() { }
             spheredata(const string& varname_,
                        const int id_,
@@ -126,112 +126,112 @@ class spheredata
                  _symmetry(symmetry_), _distrib_method(distrib_method_),
                  _processors(processors_),
                  _can_use_Llama(can_use_Llama_)
-                 
+
             {
                stringstream str;
                str << "slice=" << id_ << "::" << _name;
                _name = string(str.str());
             }
-            
+
             spheredata(const spheredata& sd) { *this = sd; }
             virtual ~spheredata() { }
-            
+
             /// access local surface data on patch "p", index i,j
             T operator()(const int p, const int i, const int j) const { return T(0); }
-            
+
             /// modify local surface data on patch "p", index i,j
             T& operator()(const int p, const int i, const int j) { }
-            
+
             /// return pointer to surface data
             void* data_pointer() const { return NULL; }
-            
+
             /// access local surface radius on patch "p", index i,j
             CCTK_REAL radius(const int p, const int i, const int j) const { return T(0); }
-            
+
             /// modify local surface radius on patch "p", index i,j
             CCTK_REAL& radius(const int p, const int i, const int j) { }
-            
+
             /// return pointer to surface radius data
             void* radius_pointer() const { return NULL; }
-            
+
             /// returns x-coordinate value of local point i,j on patch p
             CCTK_REAL cart_x(const int p, const int i, const int j) const { return 0; }
             /// returns y-coordinate value of local point i,j on patch p
             CCTK_REAL cart_y(const int p, const int i, const int j) const { return 0; }
             /// returns z-coordinate value of local point i,j on patch p
             CCTK_REAL cart_z(const int p, const int i, const int j) const { return 0; }
-            
+
             /// access delta-spacing
             vect<CCTK_REAL, 2> delta() const { return 0; }
-            
+
             /// access local angular coordinates (e.g. six-patch coordinate system)
             vect<CCTK_REAL, 2> coord(const int p, const int i, const int j) const { return 0; }
-            
+
             /// access global angular coordinates (standard theta,phi spherical coordinate system)
             vect<CCTK_REAL, 2> coord_spherical(const int p, const int i, const int j) const { return 0; }
-            
+
             /// access origin data
             vect<CCTK_REAL, 3> origin() const { return _origin; }
-            
+
             /// modify origin data
             vect<CCTK_REAL, 3>& origin() { return _origin; }
-            
+
             /// global surface size on patch "p" (== npoints == vect<int, 2>(ntheta, nphi))
             vect<int, 2> gsh(const int p) const { return 0; }
-            
+
             /// local size on patch "p"
             vect<int, 2> lsh(const int p) const { return 0; }
-            
+
             /// upper local bound on patch "p"
             vect<int, 2> ubnd(const int p) const { return 0; }
-            
+
             /// upper local bound on patch "p"
             vect<int, 2> lbnd(const int p) const { return 0; }
-            
+
             /// the number of global gridpoints on one patch (is supposed to be the same on all patches)
             vect<int, 2> npoints() const { return vect<int,2>(_ntheta, _nphi); }
-            
+
             /// returns the global number of points (ghostpoints inclusive)
             /// on one patch (which is always the same for all patches)
             int ntheta() const { return _ntheta; }
             int nphi() const { return _nphi; }
-            
+
             /// number of ghostpoints (interpatch and interprocess for all directions)
             int nghosts() const { return _nghosts; }
-            
+
             /// given two surface indeices this will return the linear index
             int SINDEX2D(const int p, const int i, const int j) const
             {
                return 0;
             }
-            
+
             /// returns the MPI-proc-id of the process that owns the local data
             int proc_id() const { return _proc_id; }
-            
+
             /// access any theta/phi coordinate via interpolation
             CCTK_REAL interpolate(const CCTK_REAL theta, const CCTK_REAL phi) const { return 0; }
-            
+
             /// interpolate from Cactus gridfunctions onto sphere
             void interpolate(const cGH* const cctkGH) { }
-            
+
             /// surface integral over surface with optional function pointer
             /// that is supposed to be multiplied to each value on the sphere
             CCTK_REAL integrate(/*const CCTK_REAL* (f)(const CCTK_REAL theta, const CCTK_REAL phi)*/) const { return 0; }
 
             /// take pointwise derivative on patch p and point i,j in theta direction
-            CCTK_REAL dx(const int p, const int i, const int j) const 
+            CCTK_REAL dx(const int p, const int i, const int j) const
             {
                 return 0;
             }
 
             /// take pointwise derivative on patch p and point i,j in phi direction
-            CCTK_REAL dy(const int p, const int i, const int j) const 
+            CCTK_REAL dy(const int p, const int i, const int j) const
             {
                 return 0;
             }
 
             /// take pointwise derivative on patch p and point i,j
-            CCTK_REAL dxdx(const int p, const int i, const int j) const 
+            CCTK_REAL dxdx(const int p, const int i, const int j) const
             {
                 return 0;
             }
@@ -247,7 +247,7 @@ class spheredata
             {
                 return 0;
             }
-            
+
             /// returns the L2-norm over the sphere
             CCTK_REAL normL2() const
             {
@@ -271,65 +271,65 @@ class spheredata
             /// don't need to store a pointwise radius
             /// and spheres that need to.
             bool has_constant_radius() const { return _has_constant_radius; }
-            
+
             /// determines whether this slice takes advantage of Llama
             /// (only the 6patch slices can potentially take advantage)
             bool uses_Llama() const { return false; }
-            
+
             /// the symmetry of the sphere (symmetric_x, symmetric_y, symmetric_z)
             vect<bool, 3> symmetry() const { return _symmetry; }
-            
+
             /// returns the name of the slice
             string name() const { return _name; }
-            
+
             /// returns the original name of the Cactus variable that is sliced 
             string varname() const { return _varname; }
-            
+
             /// returns the ID of the slice == n-th spherical slice in parfile
             int ID() const { return _id; }
-            
+
             /// return decomposed local piece of data for this MPI process
             void decompose() { }
-            
+
             /// returns the distribution method
             distrib_method_t distrib_method() const { return _distrib_method; }
-            
+
             /// a group of processors that carry parts of the slice
             vector<int> processors() const { return _processors; }
-            
+
             /// this returns whether this slice can in principle take advantage of Llama.
             bool can_use_Llama() const { return _can_use_Llama; }
-            
+
             /// write the SphereData including all attributes
             /// to the output stream defined by io_base (or its inheritants)
             void output (io_base& io) const { }
-            
+
             void input (io_base& io) { }
-            
+
             iter begin() { return iter(); }
-            
+
             /// iterator class to traverse the grid of the slice
             class const_iter
             {
                public :
                         const_iter() { }
                         virtual ~const_iter() { }
-                        
+
                         /// dereferencing operator as data-point accessor
                         T operator*() const { return 0; }
-                        
+
                         spheredata<T> const * to_spheredata() const { return NULL; }
-                        
+
                         void operator++() { (*this)++; }
-                        
+
                         void operator++(int) { }
-                        
+
                         /// query whether iterator is done
                         bool done() const
                         {
                            return false;
                         }
-                        
+
                         /// index-struct
                         struct idx_t
                         {
@@ -342,9 +342,9 @@ class spheredata
                            /// current local coordinates
                            CCTK_REAL theta, phi;
                         };
-                        
+
                         idx_t idx() const { return _idx; }
-                        
+
                protected :
                         idx_t _idx;
             };
@@ -354,23 +354,23 @@ class spheredata
                public :
                         iter() : const_iter() { }
                         virtual ~iter() { }
-                        
+
                         /// dereferencing operator as data-point accessor
                         // T& operator*() { return (*this->_spheredata).data[this->_idx.ij];  }
                         T& operator*() { abort(); }
-                        
+
                         spheredata<T>* to_spheredata()
                         {
                            return NULL; 
                         }
             };
-            
+
             class integrator
             {
                public :
                         integrator() { }
                         virtual ~integrator() { }
-                        
+
                         void init() { }
                         void finalize() { }
                         void sum(const_iter& it, CCTK_REAL f = 1.0, CCTK_REAL det = 1.0) { }
@@ -378,47 +378,47 @@ class spheredata
 
 
    protected :
-            
+
             /// for now we will not work with symmetries....
             vect<bool, 3> _symmetry;
-            
+
             bool _has_constant_radius;
-            
+
             /// the distribution method
             distrib_method_t _distrib_method;
-            
+
             ///...and the corresponding process that carries the data
             int _proc_id;
-            
+
             /// name of the slice (sliced variable-name)
             string _name;
-            
+
             /// the id of this slice
             int _id;
-            
+
             /// the name of the Cactus gridfunction which we want to slice
             string _varname;
-            
+
             /// a constant radius
             CCTK_REAL _radius;
-            
+
             /// the slice's origin
             vect<CCTK_REAL, 3> _origin;
             
             /// the resolution of one patch
             int _ntheta, _nphi;
-            
+
             /// the number of ghostpoints for each patch and direction
             int _nghosts;
-            
+
             /// this flag is set initialy according to
             /// whether Llama is activated, the origin is 0, radius=const,
             /// and whether this slice lies on a Llama radial gridpoint.
             bool _can_use_Llama;
-            
+
             /// the processor-ids among which to distribute the slice
             vector<int> _processors;
-            
+
             /// a flag specifying whether this surface is valid or not.
             bool _valid;
 };
@@ -429,12 +429,9 @@ template <typename T>
 inline io_base& operator<< (io_base& io, const spheredata<T>& sd)
 {
    sd.output(io);
-   
+
    return io;
-} 
-
-
-
+}
 
 
 }
