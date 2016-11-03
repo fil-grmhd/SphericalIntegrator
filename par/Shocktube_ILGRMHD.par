@@ -1,0 +1,335 @@
+Cactus::cctk_full_warnings         = no
+Cactus::highlight_warning_messages = no
+
+
+ActiveThorns = "AEILocalInterp Constants Fortran GSL"
+
+###################### Termination and checkpointing  #################################################
+
+Cactus::terminate       = "time"
+Cactus::cctk_final_time =  0.4
+
+#ActiveThorns= "Formaline"
+#Formaline::output_source_subdirectory		= "../../cactus-source"
+
+######################################################################################
+
+#################### Carpet ###################################################
+
+ActiveThorns = "Carpet CarpetLib CarpetInterp CarpetReduce LoopControl Slab"
+
+Carpet::verbose           = no
+Carpet::veryverbose       = no
+Carpet::schedule_barriers = no
+Carpet::storage_verbose   = no
+CarpetLib::output_bboxes  = no
+
+Carpet::domain_from_coordbase = yes
+
+driver::ghost_size       = 3
+Carpet::use_buffer_zones = yes
+
+Carpet::prolongation_order_space = 5
+Carpet::prolongation_order_time  = 2
+Carpet::enable_all_storage                                  = "yes"
+
+Carpet::convergence_level = 0
+
+Carpet::init_fill_timelevels = yes
+
+Carpet::poison_new_timelevels = yes
+CarpetLib::poison_new_memory  = yes
+
+Carpet::output_timers_every      = 6400
+CarpetLib::print_timestats_every = 6400
+CarpetLib::print_memstats_every  = 6400
+
+
+# See https://trac.einsteintoolkit.org/ticket/1512
+LoopControl::settle_after_iteration                         = 0
+
+#############################################################################
+
+
+######################## Grid setup ########################################
+
+
+ActiveThorns = "Boundary CartGrid3D CoordBase SymBase"
+
+CoordBase::domainsize = "minmax"
+
+CoordBase::xmin =  -0.50
+CoordBase::ymin =  -0.50
+CoordBase::zmin =  -0.50
+CoordBase::xmax = 0.50
+CoordBase::ymax = 0.50
+CoordBase::zmax = 0.50
+
+CoordBase::spacing = "numcells"
+CoordBase::ncells_x =  200
+CoordBase::ncells_y =  32
+CoordBase::ncells_z =  32
+
+
+CoordBase::boundary_size_x_lower     = 3
+CoordBase::boundary_size_y_lower     = 3
+CoordBase::boundary_size_z_lower     = 3
+CoordBase::boundary_size_x_upper     = 3
+CoordBase::boundary_size_y_upper     = 3
+CoordBase::boundary_size_z_upper     = 3
+
+CoordBase::boundary_shiftout_x_lower    = 1
+CoordBase::boundary_shiftout_y_lower    = 1
+CoordBase::boundary_shiftout_z_lower    = 1
+
+CoordBase::boundary_shiftout_x_upper    = 1
+CoordBase::boundary_shiftout_y_upper    = 1
+CoordBase::boundary_shiftout_z_upper    = 1
+
+CartGrid3D::type = "coordbase"
+CartGrid3D::domain       = "full"
+CartGrid3D::avoid_origin = "yes"
+
+
+ActiveThorns = "CarpetRegrid2"
+Carpet::max_refinement_levels=1
+
+CarpetRegrid2::regrid_every = 0
+CarpetRegrid2::num_centres  = 1
+CarpetRegrid2::num_levels_1 = 1
+
+###################################################################
+
+########################## Time integration ######################
+ActiveThorns = "MoL Time"
+
+MoL::ODE_Method             = "RK4"
+MoL::MoL_Intermediate_Steps = 4
+MoL::MoL_Num_Scratch_Levels = 1
+MoL::initial_data_is_crap  ="yes"
+MoL::verbose  ="register"
+
+Carpet::num_integrator_substeps = 4
+
+InitBase::initial_data_setup_method     =       "init_all_levels"
+
+#Time::timestep_method		= "courant_static"
+Time::dtfac = 0.5
+
+##################################################################
+
+#################### Illinois GRMHD ###############################
+ActiveThorns = "IllinoisGRMHD"
+ActiveThorns = "ID_converter_ILGRMHD "
+
+#============= Initial Data Import===========================
+
+ID_converter_ILGRMHD::check_gamma_th     = "no"
+ID_converter_ILGRMHD::pure_hydro_run     = "no"
+ID_converter_ILGRMHD::recompute_pressure = "no"
+
+#============= IllinoisGRMHD EOS ===========================
+IllinoisGRMHD::neos                   = 1
+
+# The following options are not part of the official release
+ID_converter_ILGRMHD::Units = "geometrised"
+ID_converter_ILGRMHD::K_EOS            = 1.0
+
+ID_converter_ILGRMHD::Gamma_EOS[0]         = 2.0
+#ID_converter_ILGRMHD::K_Initial            = 1.0
+#ID_converter_ILGRMHD::Gamma_Initial         = 2.0
+
+IllinoisGRMHD::gamma_th               = 2.0
+#======================================================================
+
+#============= IllinoisGRMHD evolution  =================================
+
+CarpetLib::support_staggered_operators = "yes"
+
+IllinoisGRMHD::damp_lorenz            = 100  # Etienne recommends less or equal 1.5/coarsest_timestep,  
+					      # if much larger -> CFL violation on coarsest level!
+					      # Giacomazzo recommends 2/M 
+
+#IllinoisGRMHD::Matter_BC	     = "frozen"
+#IllinoisGRMHD::EM_BC	             = "frozen"
+
+IllinoisGRMHD::Psi6threshold          = 12.0
+IllinoisGRMHD::conserv_to_prims_debug = 0
+IllinoisGRMHD::tau_atm                = 3.5e-9
+
+IllinoisGRMHD::rho_b_atm              = 1.0e-10
+IllinoisGRMHD::update_Tmunu              = no
+IllinoisGRMHD::register_ADM_SandR              = yes
+
+IllinoisGRMHD::use_lorenz_gauge		= no
+
+#========================================================================
+
+
+####################################################################
+
+
+########################### SpaceTime ##############################
+ActiveThorns = "ADMBase ADMCoupling ADMMacros CoordGauge SpaceMask StaticConformal TmunuBase InitBase"
+ActiveThorns = "GenericFD NewRad"
+
+SpaceMask::use_mask = yes
+
+TmunuBase::stress_energy_storage = yes
+TmunuBase::stress_energy_at_RHS  = yes
+TmunuBase::timelevels            = 1
+TmunuBase::prolongation_type     = "none"
+TmunuBase::support_old_CalcTmunu_mechanism = "no"
+
+ADMMacros::spatial_order = 4
+ADMBase::initial_data            = "Cartesian Minkowski"
+ADMBase::initial_lapse           = "one"
+ADMBase::initial_shift           = "zero"
+ADMBase::initial_dtlapse         = "none"
+ADMBase::initial_dtshift         = "none"
+
+####################################################################
+
+
+
+########################### Initial Data ##############################
+
+ActiveThorns ="HydroBase"
+
+HydroBase::timelevels        = 3
+HydroBase::prolongation_type ="ENO"
+
+
+ActiveThorns = "ILGRMHD_ShockTube"
+
+ILGRMHD_Shocktube::shocktube_type = "xshock"
+ILGRMHD_Shocktube::shock_case = "Balsara2"
+
+admbase::metric_type				=	"physical"
+
+
+####################################################################
+
+
+############################# Output  ########################################
+
+ActiveThorns = "IOUtil HDF5"
+ActiveThorns = "CarpetIOASCII CarpetIOScalar CarpetIOHDF5 CarpetIOBasic"
+
+
+CarpetIOBasic::outInfo_reductions		= "norm2 maximum minimum"
+
+IOBasic::outInfo_vars       = "
+ADMBase::lapse
+IllinoisGRMHD::rho_b
+Carpet::physical_time_per_hour
+"
+
+CarpetIOScalar::outScalar_vars      = "
+					  IllinoisGRMHD::rho_b
+					  IllinoisGRMHD::P
+					  IllinoisGRMHD::Bx
+					  IllinoisGRMHD::By
+					  IllinoisGRMHD::Bz
+					  IllinoisGRMHD::Ax
+					  IllinoisGRMHD::Ay
+					  IllinoisGRMHD::Az
+					  IllinoisGRMHD::psi6phi
+					  HydroBase::w_lorentz
+					  HydroBase::eps
+					  HydroBase::vel
+					  ADMBase::curv
+					  ADMBase::metric
+					  ADMBase::shift
+					  ADMBase::lapse
+"
+
+CarpetIOASCII::out0D_vars	= "
+				Carpet::physical_time_per_hour
+"
+
+
+CarpetIOASCII::out1D_vars      = "
+				            ADMBase::lapse
+					    ADMBase::shift
+					  IllinoisGRMHD::rho_b
+					  IllinoisGRMHD::P
+					  IllinoisGRMHD::Bx
+					  IllinoisGRMHD::By
+					  IllinoisGRMHD::Bz
+					  IllinoisGRMHD::failure_checker
+					  HydroBase::w_lorentz
+					  HydroBase::eps
+					  HydroBase::vel
+"
+CarpetIOHDF5::out2D_vars      = "
+					ADMBase::lapse
+					ADMBase::shift
+					  IllinoisGRMHD::rho_b
+					  IllinoisGRMHD::P
+					  IllinoisGRMHD::Bx
+					  IllinoisGRMHD::By
+					  IllinoisGRMHD::Bz
+					  IllinoisGRMHD::failure_checker
+					  HydroBase::w_lorentz
+					  HydroBase::eps
+					  HydroBase::vel
+					
+"
+
+CarpetIOHDF5::out3D_vars      = "
+"
+
+#============= convert to HydroBase ==============================
+ActiveThorns= "Convert_to_HydroBase"
+Convert_to_HydroBase::Convert_to_HydroBase_every	= 1
+#=================================================================
+
+#============= convert to HydroBase ==============================
+CarpetIOBasic::outInfo_criterion              = "divisor"
+CarpetIOBasic::outInfo_every			= 8
+#=================================================================
+
+#============= Scalar and 0D output ==============================
+CarpetIOScalar::outScalar_criterion           = "divisor"
+CarpetIOScalar::outScalar_dir                 = "data_Scalar"
+#CarpetIOScalar::outScalar_every              	=  1
+CarpetIOScalar::outScalar_reductions          = "norm_inf minimum maximum norm1 norm2 sum"
+
+CarpetIOASCII::out0D_criterion                = "divisor"
+CarpetIOASCII::out0D_dir                      = "data_asc_0D"
+#CarpetIOASCII::out0D_every                    = 8
+
+#=================================================================
+
+#==================  Domain output  ==============================
+CarpetIOASCII::out1D_criterion                 = "divisor"
+CarpetIOASCII::out1D_dir                       = "data_asc_1D"
+CarpetIOASCII::out1D_every                        = 16
+
+
+CarpetIOHDF5::out2D_criterion                 = "divisor"
+CarpetIOHDF5::out2D_dir                       = "data_hdf5_2D"
+CarpetIOHDF5::out2D_every                        = 32
+
+#=================================================================
+
+#==================  General output settings =======================
+IOUtil::strict_io_parameter_check = "yes"
+IOUtil::parfile_write             = "copy"
+
+# To reduce the number of files 0n the output directory
+CarpetIOScalar::all_reductions_in_one_file    = "no"
+CarpetIOScalar::one_file_per_group            = "no"
+CarpetIOASCII::one_file_per_group             = "no"
+CarpetIOHDF5::one_file_per_group              = "no"
+
+# To reduce the size of files (Caution, it might reduce the speed a little bit):
+CarpetIOHDF5::compression_level               = 0
+
+# Output an index file for each output file
+CarpetIOHDF5::output_index        = "no"
+#=================================================================
+
+##########################################################################
+
