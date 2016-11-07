@@ -322,18 +322,6 @@ void precalc_sYlm(const CCTK_INT si, const int s, const int lmin, const int lmax
                   slices_1patch(INDEX1P(sid_sYlm_im[si][lm+off]), 0)(i) = sYlm_im;
                }
             }
-            if (is_6patch(sid_sYlm_re[si][lm+off]))
-            {
-               for (iter_6patch i=slices_6patch(INDEX6P(sid_sYlm_re[si][lm+off]), 0).begin(); !i.done(); ++i)
-               {
-                  double sYlm_re, sYlm_im;
-                  sYlm(s,l,m, slices_6patch(INDEX6P(sid_sYlm_re[si][lm+off]), 0).coord_spherical(i)[0],
-                              slices_6patch(INDEX6P(sid_sYlm_re[si][lm+off]), 0).coord_spherical(i)[1],
-                              &sYlm_re, &sYlm_im);
-                  *i = sYlm_re;
-                  slices_6patch(INDEX6P(sid_sYlm_im[si][lm+off]), 0)(i) = sYlm_im;
-               }
-            }
             lm++;
          }
    }
