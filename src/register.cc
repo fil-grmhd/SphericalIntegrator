@@ -30,11 +30,17 @@ using namespace SPI;
 
 
 
-extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST varname, const CCTK_INT sn, const CCTK_INT timelevels, const CCTK_POINTER_TO_CONST distrib_method)
+extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST varname,
+                                                 const CCTK_POINTER_TO_CONST result,
+                                                 const CCTK_INT sn,
+                                                 const CCTK_INT timelevels,
+                                                 const CCTK_INT integrate_every,
+                                                 const CCTK_POINTER_TO_CONST distrib_method)
 {
    DECLARE_CCTK_PARAMETERS
 
    const char* _varname = (char*) varname;
+   const char* _result = (char*) result;
    const char* _distrib_method = (char*) distrib_method;
 
    assert(_varname != NULL);
@@ -50,11 +56,11 @@ extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST var
    if (CCTK_Equals(_distrib_method, "split"))
       d_method = split;
 
-//   if (!CCTK_Equals(_distrib_method, "const") && !CCTK_Equals(_distrib_method, "single") && !CCTK_Equals(_distrib_method, "split"))
-     if(d_method == undefined)
-      CCTK_WARN(0, "Unkown distribution method!");
+   if(d_method == undefined)
+      CCTK_WARN(0, "Unkown distribution method! Expecting const, single or split.");
 
    // convert varname to lowercase
+   // why? CHECK
    string varname_lowercase(_varname);
 
    for (int i=0; _varname[i]; ++i)
@@ -62,6 +68,13 @@ extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST var
       varname_lowercase[i] = tolower(_varname[i]);
    }
 
+   string result_lowercase(_result);
+
+   for (int i=0; _result[i]; ++i)
+   {
+      result_lowercase[i] = tolower(_result[i]);
+   }
+
    // return the registered sliced variable number
-   return ONEPATCH_SLICE_IDS+slices_1patch.register_slice(varname_lowercase, sn, timelevels, d_method);
+   return ONEPATCH_SLICE_IDS+slices_1patch.register_slice(varname_lowercase, result_lowercase, sn, timelevels, integrate_every, d_method);
 }

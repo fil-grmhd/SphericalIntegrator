@@ -88,7 +88,7 @@ class slices
 
             /// create storage for a new slice with some timelevels as decribed by the n-th parameter in the parfile
             /// and return the slice-id
-            int register_slice(const string& varname, int const slice_parameter_no, int const timelevels, const distrib_method_t distrib_method);
+            int register_slice(const string& varname, const string& result, int const slice_parameter_no, int const timelevels, int const integrate_every, const distrib_method_t distrib_method);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
             void cycle_timelevels(const int i)
@@ -97,13 +97,14 @@ class slices
                if (_slice[i].size() > 1)
                {
                   // create new slice by using parameters of the most recent timelevel
-                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().ID(),
+                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().result(), _slice[i].front().ID(),
                                           _slice[i].front().npoints()[0], _slice[i].front().npoints()[1], _slice[i].front().nghosts(),
                                           _slice[i].front().radius(0, 0, 0),
                                           _slice[i].front().radius_pointer(),
                                           _slice[i].front().origin(),
                                           _slice[i].front().has_constant_radius(),
                                           _slice[i].front().symmetry(),
+                                          _slice[i].front().integrate_every(),
                                           _slice[i].front().distrib_method(),
                                           _slice[i].front().processors(),
                                           _slice[i].front().can_use_Llama()));

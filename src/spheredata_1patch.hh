@@ -48,7 +48,7 @@ struct interp_setup_t {
 extern vector<interp_setup_t *> interp_setups;
 
 /**
-   The standard "old-school" SphericalSurface-style spherical 
+   The standard "old-school" SphericalSurface-style spherical
    slice description.
    This will be used for simple user output (if requested)
    or other thorns that want to work on such simpler slices.
@@ -65,10 +65,12 @@ class spheredata_1patch : public spheredata<T>
             spheredata_1patch(const spheredata_1patch& sd)
             {
                *this = sd;
-               if (spheredata<T>::varname() == "ss_radius")
+//               if (spheredata<T>::varname() == "ss_radius")
+               if (this->varname() == "ss_radius")
                   _radii = &data.front();
             }
             spheredata_1patch(const string& varname_,
+                              const string& result_,
                               const int id_,
                               const int ntheta_,
                               const int nphi_,
@@ -78,12 +80,13 @@ class spheredata_1patch : public spheredata<T>
                               const vect<CCTK_REAL, 3>& origin_,
                               const bool has_constant_radius_,
                               const vect<bool, 3>& symmetry_,
+                              const int integrate_every_,
                               const distrib_method_t distrib_method_,
                               const vector<int>& processors_,
                               const bool can_use_Llama_)
                // call base class contructor
-               : spheredata<T>(varname_, id_, ntheta_, nphi_, nghosts_, radius_, radii_,
-                               origin_, has_constant_radius_, symmetry_,
+               : spheredata<T>(varname_, result_, id_, ntheta_, nphi_, nghosts_, radius_, radii_,
+                               origin_, has_constant_radius_, symmetry_, integrate_every_,
                                distrib_method_, processors_, can_use_Llama_),
                // initialize members
                  _lsh(vect<int,2>(ntheta_+2*nghosts_, nphi_+2*nghosts_)),
@@ -98,21 +101,27 @@ class spheredata_1patch : public spheredata<T>
                _origin_theta = (-nghosts_+0.5)*_dtheta;  // theta direction is staggered
                _origin_phi   = -nghosts_*_dphi;
 
-               if (spheredata<T>::_distrib_method == constant) // all processors will carry all data
+//               if (spheredata<T>::_distrib_method == constant) // all processors will carry all data
+               if (this->_distrib_method == constant) // all processors will carry all data
                {
-                  data.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());
+//                  data.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());
+                  data.resize(this->npoints()[0]*this->nphi());
 
                   /*if (!spheredata<T>::has_constant_radius())
                      _radii.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());*/
                }
-               if (spheredata<T>::_distrib_method == single) // one processor will carry all data
+//               if (spheredata<T>::_distrib_method == single) // one processor will carry all data
+               if (this->_distrib_method == single) // one processor will carry all data
                {
                   int this_proc = 0;
-                  assert(spheredata<T>::_processors.size() == 1);
+//                  assert(spheredata<T>::_processors.size() == 1);
+                  assert(this->_processors.size() == 1);
                   MPI_Comm_rank(MPI_COMM_WORLD, &this_proc);
-                  if (this_proc == spheredata<T>::_processors[0])
+//                  if (this_proc == spheredata<T>::_processors[0])
+                  if (this_proc == this->_processors[0])
                   {
-                     data.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());
+//                     data.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());
+                     data.resize(this->npoints()[0]*this->nphi());
 
                      /*if (!spheredata<T>::has_constant_radius())
                         _radii.resize(spheredata<T>::npoints()[0]*spheredata<T>::nphi());*/
@@ -122,7 +131,8 @@ class spheredata_1patch : public spheredata<T>
                      _lsh = vect<int,2>(0, 0);
                   }
                }
-               if (spheredata<T>::_distrib_method == split) // a group of processors will carry the data
+//               if (spheredata<T>::_distrib_method == split) // a group of processors will carry the data
+               if (this->_distrib_method == split) // a group of processors will carry the data
                {
                   // do a domain decomposition
                   decompose();
@@ -139,7 +149,8 @@ class spheredata_1patch : public spheredata<T>
 
                // if the radius-pointer has not been set then we assume that this slice
                // cariies the radius as data!
-               if (spheredata<T>::varname() == "ss_radius")//_radii == NULL)
+//               if (spheredata<T>::varname() == "ss_radius")//_radii == NULL)
+               if (this->varname() == "ss_radius")//_radii == NULL)
                {
                   _radii = &data.front();
 
@@ -147,22 +158,22 @@ class spheredata_1patch : public spheredata<T>
                   for (iter i=begin(); !i.done(); ++i)
                      *i = radius_;
                }
-               //if (spheredata<T>::varname() != "ss_radius")
-               //   for (iter i=begin(); !i.done(); ++i)
-               //      cout << _radii[i.idx().ij]<< endl;
 
-               if (lsh(0)[0]-2*spheredata<T>::nghosts() > 0)
-                  int_weights = vector<CCTK_REAL>(lsh(0)[0]-2*spheredata<T>::nghosts(), 0);
+//               if (lsh(0)[0]-2*spheredata<T>::nghosts() > 0)
+               if (lsh(0)[0]-2*this->nghosts() > 0)
+//                  int_weights = vector<CCTK_REAL>(lsh(0)[0]-2*spheredata<T>::nghosts(), 0);
+                  int_weights = vector<CCTK_REAL>(lsh(0)[0]-2*this->nghosts(), 0);
 
                // initialize Gauss-integration weights
                for (int i=0; i < lsh(0)[0]; ++i)
                {
                   // dont't calculate weights in ghostzones
-                  if (i < spheredata<T>::nghosts() ||
-                      i > lsh(0)[0]-spheredata<T>::nghosts()-1)
+//                  if (i < spheredata<T>::nghosts() || i > lsh(0)[0]-spheredata<T>::nghosts()-1)
+                  if (i < this->nghosts() || i > lsh(0)[0]-this->nghosts()-1)
                      continue;
 
-                  int_weights[i-spheredata<T>::nghosts()] = weight(i+lbnd(0)[0]-spheredata<T>::nghosts(), gsh(0)[0]-2*spheredata<T>::nghosts());
+//                  int_weights[i-spheredata<T>::nghosts()] = weight(i+lbnd(0)[0]-spheredata<T>::nghosts(), gsh(0)[0]-2*spheredata<T>::nghosts());
+                  int_weights[i-this->nghosts()] = weight(i+lbnd(0)[0]-this->nghosts(), gsh(0)[0]-2*this->nghosts());
 
                }
             }
@@ -227,8 +238,10 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL radius(const int p=0, const int i=0, const int j=0) const
             {
                assert(p < npatches);
-               if (spheredata<T>::has_constant_radius())
-                  return spheredata<T>::_radius;
+//               if (spheredata<T>::has_constant_radius())
+               if (this->has_constant_radius())
+//                  return spheredata<T>::_radius;
+                  return this->_radius;
                else
                {
                   assert(_radii != NULL);
@@ -246,8 +259,10 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL& radius(const int p=0, const int i=0, const int j=0)
             {
                assert(p < npatches);
-               if (spheredata<T>::has_constant_radius())
-                  return spheredata<T>::_radius;
+//               if (spheredata<T>::has_constant_radius())
+//                  return spheredata<T>::_radius;
+               if (this->has_constant_radius())
+                  return this->_radius;
                else
                {
                   assert(_radii != NULL);
@@ -267,7 +282,8 @@ class spheredata_1patch : public spheredata<T>
             {
                // if this slice carries the radius-function
                // then return the data!
-               if (spheredata<T>::varname() == "ss_radius")
+//               if (spheredata<T>::varname() == "ss_radius")
+               if (this->varname() == "ss_radius")
                   return (void*) &data.front();
                return (void*)_radii;
             }
@@ -311,7 +327,8 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL cart_x(const int p, const int i, const int j) const 
             {
                assert(p < npatches);
-               return spheredata<T>::origin()[0] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * cos(_origin_phi+(j+_lbnd[1])*_dphi);
+               return this->origin()[0] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * cos(_origin_phi+(j+_lbnd[1])*_dphi);
+//               return spheredata<T>::origin()[0] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * cos(_origin_phi+(j+_lbnd[1])*_dphi);
             }
 
             /// same as above but using iterator
@@ -324,7 +341,8 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL cart_y(const int p, const int i, const int j) const
             {
                assert(p < npatches);
-               return spheredata<T>::origin()[1] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * sin(_origin_phi+(j+_lbnd[1])*_dphi);
+//               return spheredata<T>::origin()[1] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * sin(_origin_phi+(j+_lbnd[1])*_dphi);
+               return this->origin()[1] + radius(p, i, j) * sin(_origin_theta+(i+_lbnd[0])*_dtheta) * sin(_origin_phi+(j+_lbnd[1])*_dphi);
             }
 
             /// same as above but using iterator
@@ -337,7 +355,8 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL cart_z(const int p, const int i, const int j) const
             {
                assert(p < npatches);
-               return spheredata<T>::origin()[2] + radius(p, i, j) * cos(_origin_theta+(i+_lbnd[0])*_dtheta);
+               return this->origin()[2] + radius(p, i, j) * cos(_origin_theta+(i+_lbnd[0])*_dtheta);
+//               return spheredata<T>::origin()[2] + radius(p, i, j) * cos(_origin_theta+(i+_lbnd[0])*_dtheta);
             }
 
             /// same as above but using iterator
@@ -358,10 +377,10 @@ class spheredata_1patch : public spheredata<T>
             /// query whether given set of indices is in ghostzone
             bool ghostzone(const int p, const int i, const int j) const
             {
-               if (i < spheredata<T>::nghosts() ||
-                   i > lsh(p)[0]-spheredata<T>::nghosts()-1 ||
-                   j < spheredata<T>::nghosts() ||
-                   j > lsh(p)[1]-spheredata<T>::nghosts()-1)
+//               if (i < spheredata<T>::nghosts() || i > lsh(p)[0]-spheredata<T>::nghosts()-1 ||
+//                   j < spheredata<T>::nghosts() || j > lsh(p)[1]-spheredata<T>::nghosts()-1)
+               if (i < this->nghosts() || i > lsh(p)[0]-this->nghosts()-1 ||
+                   j < this->nghosts() || j > lsh(p)[1]-this->nghosts()-1)
                    return true;
                return false;
             }
@@ -411,7 +430,8 @@ class spheredata_1patch : public spheredata<T>
             void interpolate(const cGH* const cctkGH)
             {
               // get the input variable's index
-              const char* const varname = spheredata<T>::varname().c_str();
+//              const char* const varname = spheredata<T>::varname().c_str();
+              const char* const varname = this->varname().c_str();
               vector<int> varindices (N_INPUT_ARRAYS, CCTK_VarIndex(varname));
               if (varindices[0] < 0) {
                 CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
@@ -420,8 +440,10 @@ class spheredata_1patch : public spheredata<T>
               vector<CCTK_REAL *> values (N_OUTPUT_ARRAYS, &data.front());
 
               // set up the interpolation
-              assert(interp_setups.size() > spheredata<T>::ID());
-              interp_setup_t* &interp_setup = interp_setups[spheredata<T>::ID()];
+//              assert(interp_setups.size() > spheredata<T>::ID());
+              assert(interp_setups.size() > this->ID());
+//              interp_setup_t* &interp_setup = interp_setups[spheredata<T>::ID()];
+              interp_setup_t* &interp_setup = interp_setups[this->ID()];
               if (not interp_setup) {
                 interp_setup = new interp_setup_t(lsh(0)[0] * lsh(0)[1]);
 
@@ -447,7 +469,8 @@ class spheredata_1patch : public spheredata<T>
               assert(interp_setup->npoints == lsh(0)[0] * lsh(0)[1]);
               interp_setup->fasterp_setup->interpolate (cctkGH, varindices, values);
 
-              if (not spheredata<T>::has_constant_radius()) {
+//              if (not spheredata<T>::has_constant_radius()) {
+              if (not this->has_constant_radius()) {
                 delete interp_setup;
                 interp_setup = NULL;
               }
@@ -462,7 +485,8 @@ class spheredata_1patch : public spheredata<T>
                {
                   // We do a Gauss-quadrature which is of order O(h^{2N})
                   // where N is the number of points.
-                  if (spheredata<T>::has_constant_radius())
+//                  if (spheredata<T>::has_constant_radius())
+                  if (this->has_constant_radius())
                   {
                      integrator myint(*this);
 
@@ -475,7 +499,8 @@ class spheredata_1patch : public spheredata<T>
                   {
                      // we need a ghostzone width of 2 for integration since we need to take
                      // derivatives!
-                     if (spheredata<T>::nghosts() < 2)
+//                     if (spheredata<T>::nghosts() < 2)
+                     if (this->nghosts() < 2)
                         CCTK_WARN(0, "ghostzone-width too small!");
 
                      integrator myint(*this);
@@ -630,7 +655,8 @@ class spheredata_1patch : public spheredata<T>
                // interprocessor synchronization
                CCTK_REAL global_norm;
                MPI_Allreduce (&norm, &global_norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-               return sqrt(global_norm)/((spheredata<T>::gsh(0)[0]-2*spheredata<T>::nghosts())*(spheredata<T>::gsh(0)[1]-2*spheredata<T>::nghosts()));
+//               return sqrt(global_norm)/((spheredata<T>::gsh(0)[0]-2*spheredata<T>::nghosts())*(spheredata<T>::gsh(0)[1]-2*spheredata<T>::nghosts()));
+               return sqrt(global_norm)/((this->gsh(0)[0]-2*this->nghosts())*(this->gsh(0)[1]-2*this->nghosts()));
             }
 
             /// returns the infinity-norm over the sphere
@@ -657,7 +683,8 @@ class spheredata_1patch : public spheredata<T>
                {
                   // We do a Gauss-quadrature which is of order O(h^{2N})
                   // where N is the number of points.
-                  if (spheredata<T>::has_constant_radius())
+//                  if (spheredata<T>::has_constant_radius())
+                  if (this->has_constant_radius())
                   {
                      integrator intsYlm_re(*this);
                      integrator intsYlm_im(*this);
@@ -677,7 +704,8 @@ class spheredata_1patch : public spheredata<T>
                   {
                      // we need a ghostzone width of 2 for integration since we need to take
                      // derivatives!
-                     if (spheredata<T>::nghosts() < 2)
+//                     if (spheredata<T>::nghosts() < 2)
+                     if (this->nghosts() < 2)
                         CCTK_WARN(0, "ghostzone-width too small!");
 
                      integrator intsYlm_re(*this);
@@ -710,7 +738,8 @@ class spheredata_1patch : public spheredata<T>
 
                const CCTK_REAL theta = _origin_theta+(i+_lbnd[0])*_dtheta;
 
-               if (spheredata<T>::has_constant_radius())
+//               if (spheredata<T>::has_constant_radius())
+               if (this->has_constant_radius())
                   return radius(0,0,0)*radius(0,0,0)*sin(theta);
 
                assert(i >= 2 && i < lsh(p)[0]-2);
@@ -983,7 +1012,8 @@ class spheredata_1patch : public spheredata<T>
                int nprocs = 1;
                MPI_Comm_size ( MPI_COMM_WORLD, &nprocs );
                // currently, we will split accross all processors!
-               assert(nprocs == spheredata<T>::_processors.size());
+//               assert(nprocs == spheredata<T>::_processors.size());
+               assert(nprocs == this->_processors.size());
 
                vect<int,2> dims(0, 0);
                MPI_Dims_create(nprocs, 2, &dims[0]);
@@ -1004,15 +1034,18 @@ class spheredata_1patch : public spheredata<T>
                   _lbnd = vect<int,2>(0, 0);
                   _ubnd = vect<int,2>(0, 0);
 
-                  _lsh = (_gsh - vect<int,2>(2*spheredata<T>::nghosts(), 2*spheredata<T>::nghosts())) / dims + 2*spheredata<T>::nghosts();
+//                  _lsh = (_gsh - vect<int,2>(2*spheredata<T>::nghosts(), 2*spheredata<T>::nghosts())) / dims + 2*spheredata<T>::nghosts();
+                  _lsh = (_gsh - vect<int,2>(2*this->nghosts(), 2*this->nghosts())) / dims + 2*this->nghosts();
 
-                  vect<int,2> mod = (_gsh - vect<int,2>(2*spheredata<T>::nghosts(), 2*spheredata<T>::nghosts())) % dims;
+//                  vect<int,2> mod = (_gsh - vect<int,2>(2*spheredata<T>::nghosts(), 2*spheredata<T>::nghosts())) % dims;
+                  vect<int,2> mod = (_gsh - vect<int,2>(2*this->nghosts(), 2*this->nghosts())) % dims;
 
                   for (int i=0; i < 2; ++i)
                      if (proc_vect[i] < mod[i])
                         _lsh[i]++;
 
-                  assert(_lsh[0] != 2*spheredata<T>::nghosts() && _lsh[1] != 2*spheredata<T>::nghosts());
+//                  assert(_lsh[0] != 2*spheredata<T>::nghosts() && _lsh[1] != 2*spheredata<T>::nghosts());
+                  assert(_lsh[0] != 2*this->nghosts() && _lsh[1] != 2*this->nghosts());
 
                   for (int i=0; i < 2; i++)
                   {
@@ -1020,25 +1053,17 @@ class spheredata_1patch : public spheredata<T>
                         _lbnd[i] = 0;
                      else
                      {
-                        _lbnd[i] = _lsh[i] * proc_vect[i] - proc_vect[i]*2*spheredata<T>::nghosts();
+//                        _lbnd[i] = _lsh[i] * proc_vect[i] - proc_vect[i]*2*spheredata<T>::nghosts();
+                        _lbnd[i] = _lsh[i] * proc_vect[i] - proc_vect[i]*2*this->nghosts();
                         if (proc_vect[i] >= mod[i])
                            _lbnd[i] += mod[i];
                      }
                      if (proc_vect[i] == dims[i]-1)
                         _ubnd[i] = _gsh[i]-1;
                      else
-                        _ubnd[i] = _lbnd[i] + _lsh[i]-1;// + spheredata<T>::nghosts();
+                        _ubnd[i] = _lbnd[i] + _lsh[i]-1;
                   }
 
-                  /*for (int i=0; i < 2; i++)
-                  {
-                     if (proc_vect[i] == dims[i]-1)
-                     {
-                        _lsh[i] += (_gsh[i]- 2*spheredata<T>::nghosts()) % dims[i];
-                        _ubnd[i] += (_gsh[i]- 2*spheredata<T>::nghosts()) % dims[i];
-                     }
-                  }*/
-                  //cout << "----------- " << this_proc << ": " << _lsh << ",  " << _lbnd << ",   " << _ubnd << endl;
                   return;
                }
                // this processor carries no data....

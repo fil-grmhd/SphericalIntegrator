@@ -107,6 +107,7 @@ class spheredata
 
             spheredata() { }
             spheredata(const string& varname_,
+                       const string& result_,
                        const int id_,
                        const int ntheta_,
                        const int nphi_,
@@ -116,14 +117,15 @@ class spheredata
                        const vect<CCTK_REAL, 3>& origin_,
                        const bool has_constant_radius_,
                        const vect<bool, 3>& symmetry_,
+                       const int integrate_every_,
                        const distrib_method_t distrib_method_,
                        const vector<int>& processors_,
                        const bool can_use_Llama_)
-               : _varname(varname_), _id(id_), _name(varname_),
+               : _varname(varname_), _result(result_), _id(id_), _name(varname_),
                  _ntheta(ntheta_+2*nghosts_), _nphi(nphi_+2*nghosts_), _nghosts(nghosts_),
                  _radius(radius_), _origin(origin_),
                  _has_constant_radius(has_constant_radius_),
-                 _symmetry(symmetry_), _distrib_method(distrib_method_),
+                 _symmetry(symmetry_), _integrate_every(integrate_every_),_distrib_method(distrib_method_),
                  _processors(processors_),
                  _can_use_Llama(can_use_Llama_)
 
@@ -278,8 +280,14 @@ class spheredata
             /// returns the name of the slice
             string name() const { return _name; }
 
-            /// returns the original name of the Cactus variable that is sliced 
+            /// returns the original name of the Cactus variable that is sliced
             string varname() const { return _varname; }
+
+            /// returns the original name of the Cactus scalar that gets the integration result
+            string result() const { return _result; }
+
+            /// returns integration iteration number
+            int integrate_every() const { return _integrate_every; }
 
             /// returns the ID of the slice == n-th spherical slice in parfile
             int ID() const { return _id; }
@@ -394,6 +402,12 @@ class spheredata
 
             /// the name of the Cactus gridfunction which we want to slice
             string _varname;
+
+            /// the name of the Cactus scalar, where the integration result should be stored
+            string _result;
+
+            /// how often should the GF be interpolated and integrated?
+            int _integrate_every;
 
             /// a constant radius
             CCTK_REAL _radius;

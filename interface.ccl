@@ -9,22 +9,24 @@ inherits: grid
 INCLUDE HEADER: slices.hh in spherical_slices.hh
 INCLUDE HEADER: IO/io_hdf5.h in io_hdf5.h
 
-
-# Get current refinement level
-#CCTK_INT FUNCTION GetRefinementLevel (CCTK_POINTER_TO_CONST IN cctkGH)
-#USES FUNCTION GetRefinementLevel
-
-
 PUBLIC:
 
 
 # Register a Cactus variable for being sliced and return registration number
+# Parameters are name of the grid function (varname), 
+# name of the scalar where the result should be stored (result),
+# sphereid of the sphere over which will be integrated (sn),
+# number of timelevels to keep on the sphere (timelevels),
+# how often should be integrated (integrate_every)
+# and the distribution method of the sphere data (distrib_method)
+
 CCTK_INT FUNCTION \
-    SphericalIntegrator_RegisterVariable \
-         (CCTK_POINTER_TO_CONST IN varname, \
-	  CCTK_INT IN sn, \
-	  CCTK_INT IN timelevels, \
-	  CCTK_POINTER_TO_CONST IN distrib_method)
+    SphericalIntegrator_RegisterVariable(CCTK_POINTER_TO_CONST IN varname, \
+	                                       CCTK_POINTER_TO_CONST IN result, \
+	                                       CCTK_INT IN sn, \
+                                         CCTK_INT IN timelevels, \
+                                         CCTK_INT IN integrate_every, \
+	                                       CCTK_POINTER_TO_CONST IN distrib_method)
 PROVIDES FUNCTION SphericalIntegrator_RegisterVariable \
     WITH SphericalIntegrator_Register \
     LANGUAGE C
