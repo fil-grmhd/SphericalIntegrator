@@ -22,7 +22,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "slices.hh"
 
-namespace SPS {
+namespace SPI {
 
 template <class SD>
 int slices<SD>::register_slice(const string& varname, int const slice_parameter_no, int const timelevels, const distrib_method_t distrib_method)
@@ -87,7 +87,5 @@ int slices<SD>::register_slice(const string& varname, int const slice_parameter_
 
   // Instantiate template
   template class slices<spheredata_1patch<CCTK_REAL> >;
-  // template class slices<spheredata_2patch<CCTK_REAL> >;
-  template class slices<spheredata_6patch<CCTK_REAL> >;
 
-} // namespace SPS
+} // namespace SPI

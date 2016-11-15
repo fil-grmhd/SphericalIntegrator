@@ -27,14 +27,14 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 
 
-namespace SPS {
+namespace SPI {
 
 
 
-using namespace SPS;
+using namespace SPI;
 
 
-extern "C" void SphericalSlice_CheckAndUpdate(CCTK_ARGUMENTS)
+extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS

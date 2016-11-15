@@ -26,11 +26,11 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "slices.hh"
 
 
-using namespace SPS;
+using namespace SPI;
 
 
 
-extern "C" CCTK_REAL SphericalSlice_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
+extern "C" CCTK_REAL SphericalIntegrator_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
 {
    DECLARE_CCTK_PARAMETERS
 

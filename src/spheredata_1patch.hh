@@ -31,7 +31,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 //#define DEBUG
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;
@@ -198,7 +198,7 @@ class spheredata_1patch : public spheredata<T>
             /// modify local surface data on patch "p", index i,j
             T& operator()(const int p, const int i, const int j)
             {
-               assert(p < npatches); 
+               assert(p < npatches);
                return data[i + lsh(0)[0]*j];
             }
 

@@ -26,11 +26,11 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "setup.hh"
 #include "carpet.hh"
 
-using namespace SPS;
+using namespace SPI;
 
 
 
-extern "C" CCTK_INT SphericalSlice_Sync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
+extern "C" CCTK_INT SphericalIntegrator_Sync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -50,7 +50,7 @@ extern "C" CCTK_INT SphericalSlice_Sync(const CCTK_POINTER_TO_CONST cctkGH_, con
 
 
 
-extern "C" CCTK_INT SphericalSlice_CollectiveSync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_POINTER_TO_CONST varno_, const CCTK_INT number_of_vars)
+extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_POINTER_TO_CONST varno_, const CCTK_INT number_of_vars)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -213,8 +213,7 @@ extern "C" CCTK_INT SphericalSlice_CollectiveSync(const CCTK_POINTER_TO_CONST cc
      interp_coords[2] = (const void*) &interp_z.front();
 
      for (int i=0; i < number_of_vars; ++i)
-        output_arrays[i] = slices_1patch(INDEX1P(varno[i]), 0).data_pointer();//(void*) &((vector<vector<CCTK_REAL> >*) slices_6patch(INDEX6P(sid[si][i]), 0).data_pointer())[m].front();
-     //output_arrays[0] = (void*) &data[m].front();
+        output_arrays[i] = slices_1patch(INDEX1P(varno[i]), 0).data_pointer();
 
      // Do the actual interpolation.
      // Only those processes interpolate that contain data

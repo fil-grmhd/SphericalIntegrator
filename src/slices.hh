@@ -25,12 +25,9 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <vector>
 #include "mpi.h"
 #include "spheredata_1patch.hh"
-#include "spheredata_2patch.hh"
-#include "spheredata_6patch.hh"
 
 
-
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;
@@ -174,7 +171,7 @@ class slices
 /// 6-patch slice identity numbers are above 20000
 #define SIXPATCH_SLICE_IDS 20000
 
-/// all slices for 1patch, 2patch and 6patch systems. 
+/// all slices for 1patch systems.
 extern slices<spheredata_1patch<CCTK_REAL> > slices_1patch;
 
 extern slices<spheredata_1patch<CCTK_REAL> > radius_1patch;
@@ -183,12 +180,6 @@ extern slices<spheredata_1patch<CCTK_REAL> > radius_1patch;
 typedef spheredata_1patch<CCTK_REAL>::integrator integrator_1patch;
 typedef spheredata_1patch<CCTK_REAL>::const_iter const_iter_1patch;
 typedef spheredata_1patch<CCTK_REAL>::iter       iter_1patch;
-
-typedef spheredata_6patch<CCTK_REAL>::integrator integrator_6patch;
-typedef spheredata_6patch<CCTK_REAL>::const_iter const_iter_6patch;
-typedef spheredata_6patch<CCTK_REAL>::iter       iter_6patch;
-
-
 
 #define INDEX1P(x) x-ONEPATCH_SLICE_IDS
 #define INDEX2P(x) x-TWOPATCH_SLICE_IDS
@@ -202,25 +193,6 @@ inline bool is_1patch(CCTK_INT varno)
       return true;
    return false;
 }
-
-
-/// given a variable-number we check if this is a 1-patch slice
-inline bool is_2patch(CCTK_INT varno)
-{
-   if (varno >= TWOPATCH_SLICE_IDS && varno < SIXPATCH_SLICE_IDS)
-      return true;
-   return false;
-}
-
-
-/// given a variable-number we check if this is a 1-patch slice
-inline bool is_6patch(CCTK_INT varno)
-{
-   if (varno >= SIXPATCH_SLICE_IDS)
-      return true;
-   return false;
-}
-
 
 
 }

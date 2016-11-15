@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <vector>
 #include <cassert>
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;

@@ -26,11 +26,11 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "slices.hh"
 
 
-using namespace SPS;
+using namespace SPI;
 
 
 
-extern "C" CCTK_INT SphericalSlice_Register(const CCTK_POINTER_TO_CONST varname, const CCTK_INT sn, const CCTK_INT timelevels, const CCTK_POINTER_TO_CONST distrib_method)
+extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST varname, const CCTK_INT sn, const CCTK_INT timelevels, const CCTK_POINTER_TO_CONST distrib_method)
 {
    DECLARE_CCTK_PARAMETERS
 

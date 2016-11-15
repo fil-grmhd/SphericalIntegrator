@@ -1,4 +1,4 @@
-# Schedule definitions for thorn SphericalSlice
+# Schedule definitions for thorn SphericalIntegrator
 
 
 STORAGE: ss_active
@@ -10,7 +10,7 @@ STORAGE: can_use_Llama
 STORAGE: new_radius
 
 
-SCHEDULE SphericalSlice_ParamCheck AT CCTK_PARAMCHECK
+SCHEDULE SphericalIntegrator_ParamCheck AT CCTK_PARAMCHECK
 {
   LANG: C
   OPTIONS: GLOBAL
@@ -19,7 +19,7 @@ SCHEDULE SphericalSlice_ParamCheck AT CCTK_PARAMCHECK
 
 # I cannot schedule this at BASEGRID because this routine must be called only at
 # at the very beginning of the simulation and not during recovery.
-SCHEDULE SphericalSlice_Setup AT INITIAL #BASEGRID
+SCHEDULE SphericalIntegrator_Setup AT INITIAL #BASEGRID
 {
   LANG: C
   OPTIONS: GLOBAL
@@ -27,14 +27,14 @@ SCHEDULE SphericalSlice_Setup AT INITIAL #BASEGRID
 
 
 
-SCHEDULE SphericalSlice_PostSetup AT INITIAL AFTER SphericalSlice_Setup  #BASEGRID AFTER SphericalSlice_Setup
+SCHEDULE SphericalIntegrator_PostSetup AT INITIAL AFTER SphericalIntegrator_Setup  #BASEGRID AFTER SphericalIntegrator_Setup
 {
   LANG: C
   OPTIONS: GLOBAL
 } "Post setup."
 
 
-SCHEDULE SphericalSlice_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_PostStep
+SCHEDULE SphericalIntegrator_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_PostStep
 {
   LANG: C
   OPTIONS: GLOBAL
@@ -44,17 +44,17 @@ SCHEDULE SphericalSlice_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_PostStep
 
 
 
-SCHEDULE GROUP SphericalSlice_HasBeenSet AT INITIAL AFTER SphericalSlice_PostSetup
+SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT INITIAL AFTER SphericalIntegrator_PostSetup
 {
 } "Set the spherical slices before this group and use them afterwards"
 
 
-SCHEDULE GROUP SphericalSlice_HasBeenSet AT POST_RECOVER_VARIABLES AFTER SphericalSlice_PostSetup BEFORE MoL_PostStep
+SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE MoL_PostStep
 {
 } "Set the spherical slices before this group and use them afterwards"
 
 
-SCHEDULE GROUP SphericalSlice_HasBeenSet AT POSTSTEP
+SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POSTSTEP
 {
 } "Set the spherical slices before this group and use them afterwards"
 
@@ -62,7 +62,7 @@ SCHEDULE GROUP SphericalSlice_HasBeenSet AT POSTSTEP
 
 
 
-SCHEDULE SphericalSlice_CheckAndUpdate IN SphericalSlice_HasBeenSet
+SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_HasBeenSet
 {
   LANG: C
   OPTIONS: GLOBAL

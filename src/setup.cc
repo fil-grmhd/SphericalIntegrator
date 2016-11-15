@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 
 
-namespace SPS {
+namespace SPI {
 
 static
 CCTK_REAL min (CCTK_REAL const x, CCTK_REAL const y)
@@ -76,10 +76,10 @@ vector<interp_setup_t *> interp_setups;
 }
 
 
-using namespace SPS;
+using namespace SPI;
 
 
-extern "C" void SphericalSlice_Setup(CCTK_ARGUMENTS)
+extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
@@ -184,7 +184,7 @@ extern "C" void SphericalSlice_Setup(CCTK_ARGUMENTS)
 
 
 
-extern "C" void SphericalSlice_PostSetup(CCTK_ARGUMENTS)
+extern "C" void SphericalIntegrator_PostSetup(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
@@ -206,7 +206,7 @@ extern "C" void SphericalSlice_PostSetup(CCTK_ARGUMENTS)
 
       // We are now going to set up the radii as separately registered slice for each slice
       // Each processor should have the radius available. That means we gonna use a constant distribution.
-      //ss_radius_id[i] = SphericalSlice_Register("ss_radius", i, 1, "const");
+      //ss_radius_id[i] = SphericalIntegrator_Register("ss_radius", i, 1, "const");
       ss_radius_id[i] = ONEPATCH_SLICE_IDS + radius_1patch.register_slice("ss_radius", i, 1, constant);
 
       if (set_elliptic[i])
@@ -229,7 +229,7 @@ extern "C" void SphericalSlice_PostSetup(CCTK_ARGUMENTS)
 
    // after all radius-slices have been set, we need to update
    // the pointers.
-   // From this point on, radius_1patch and radius_6patch are NOT allowed to change, otherwise
+   // From this point on, radius_1patch is NOT allowed to change, otherwise
    // the radius-pointers get screwed!!!
    radius_pointers = vector<void*>(nslices, static_cast<void*>(NULL));
    for (int i=0; i < nslices; ++i)
@@ -237,6 +237,6 @@ extern "C" void SphericalSlice_PostSetup(CCTK_ARGUMENTS)
       // get radius pointer
       radius_pointers[i] = radius_1patch(INDEX1P(ss_radius_id[i]), 0).radius_pointer();
    }
-   SPS::interpolator_order = interpolator_order;
+   SPI::interpolator_order = interpolator_order;
    interp_setups.resize(nslices, NULL);
 }

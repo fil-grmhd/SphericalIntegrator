@@ -37,7 +37,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "mpi.h"
 
 
-namespace SPS {
+namespace SPI {
 
 
 /// each slice will be initialized with this value
@@ -272,10 +272,6 @@ class spheredata
             /// and spheres that need to.
             bool has_constant_radius() const { return _has_constant_radius; }
 
-            /// determines whether this slice takes advantage of Llama
-            /// (only the 6patch slices can potentially take advantage)
-            bool uses_Llama() const { return false; }
-
             /// the symmetry of the sphere (symmetric_x, symmetric_y, symmetric_z)
             vect<bool, 3> symmetry() const { return _symmetry; }
 
@@ -404,7 +400,7 @@ class spheredata
 
             /// the slice's origin
             vect<CCTK_REAL, 3> _origin;
-            
+
             /// the resolution of one patch
             int _ntheta, _nphi;
 

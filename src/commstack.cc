@@ -21,7 +21,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "commstack.hh"
 
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;

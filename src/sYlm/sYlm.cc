@@ -22,7 +22,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "sYlm.h"
 
 
-namespace SPS {
+namespace SPI {
 
 // pi
 const double pi = 4.0*atan(1.0);

@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "slices.hh"
 
 
-using namespace SPS;
+using namespace SPI;
 
 
 // the slice ids for each slice and precalculated sYlm
@@ -37,12 +37,12 @@ vector<int> stored_lmin(0);
 vector<int> stored_lmax(0);
 
 
-extern "C" CCTK_INT SphericalSlice_ContractWithAllPrecalcedsYlm(const CCTK_INT si, const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs);
+extern "C" CCTK_INT SphericalIntegrator_ContractWithAllPrecalcedsYlm(const CCTK_INT si, const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs);
 void precalc_sYlm(const CCTK_INT si, const int s, const int lmin, const int lmax);
 
 
 // CHECK needed/useful?
-extern "C" CCTK_COMPLEX SphericalSlice_ContractWithsYlm(const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT l, const CCTK_INT m)
+extern "C" CCTK_COMPLEX SphericalIntegrator_ContractWithsYlm(const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT l, const CCTK_INT m)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -61,7 +61,7 @@ extern "C" CCTK_COMPLEX SphericalSlice_ContractWithsYlm(const CCTK_INT varno, co
 
 
 // CHECK needed/useful?
-extern "C" CCTK_INT SphericalSlice_ContractWithAllsYlm(const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs)
+extern "C" CCTK_INT SphericalIntegrator_ContractWithAllsYlm(const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -73,8 +73,6 @@ extern "C" CCTK_INT SphericalSlice_ContractWithAllsYlm(const CCTK_INT varno, con
    stored_lmin.resize(nslices, 0);
    stored_lmax.resize(nslices, -1);
 
-   if (is_1patch(varno))
-   {
       assert(INDEX1P(varno) < slices_1patch.slice().size());
 
       const int ID = slices_1patch(INDEX1P(varno), timelevel).ID();
@@ -83,7 +81,7 @@ extern "C" CCTK_INT SphericalSlice_ContractWithAllsYlm(const CCTK_INT varno, con
 
       if (precalc_sYlms && s == 0 && stored_lmin[ID] <= lmin && lmax <= stored_lmax[ID])
       {
-         SphericalSlice_ContractWithAllPrecalcedsYlm(ID, varno, timelevel, s, lmin, lmax, coeffs);
+         SphericalIntegrator_ContractWithAllPrecalcedsYlm(ID, varno, timelevel, s, lmin, lmax, coeffs);
          return 0;
       }
 
@@ -159,13 +157,12 @@ extern "C" CCTK_INT SphericalSlice_ContractWithAllsYlm(const CCTK_INT varno, con
             lm++;
          }
       }
-   }
 
    return 0;
 }
 
 
-extern "C" CCTK_INT SphericalSlice_ContractWithAllPrecalcedsYlm(const CCTK_INT si, const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs)
+extern "C" CCTK_INT SphericalIntegrator_ContractWithAllPrecalcedsYlm(const CCTK_INT si, const CCTK_INT varno, const CCTK_INT timelevel, const CCTK_INT s, const CCTK_INT lmin, const CCTK_INT lmax, CCTK_COMPLEX* const coeffs)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -175,8 +172,6 @@ extern "C" CCTK_INT SphericalSlice_ContractWithAllPrecalcedsYlm(const CCTK_INT s
    int mode_dim = (lmax-lmin+1)*(lmax-lmin+1);
    int off = lmin*lmin;
 
-   if (is_1patch(varno))
-   {
       assert(INDEX1P(varno) < slices_1patch.slice().size());
 
       if (!slices_1patch(INDEX1P(varno), 0).has_constant_radius() && slices_1patch(INDEX1P(varno), 0).nghosts() < 2) 
@@ -273,7 +268,6 @@ extern "C" CCTK_INT SphericalSlice_ContractWithAllPrecalcedsYlm(const CCTK_INT s
             lm++;
          }
       }
-   }
 
   return 0;
 }
@@ -306,10 +300,11 @@ void precalc_sYlm(const CCTK_INT si, const int s, const int lmin, const int lmax
          for (int m=0; m <= l; ++m)  // we only need to store +m modes because -m can be recovered from them via CC!
          {
             // register
-            sid_sYlm_re[si][lm+off] = SphericalSlice_RegisterVariable("sYlm_re", si, 1, "const");
-            sid_sYlm_im[si][lm+off] = SphericalSlice_RegisterVariable("sYlm_im", si, 1, "const");
+            sid_sYlm_re[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_re", si, 1, "const");
+            sid_sYlm_im[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_im", si, 1, "const");
 
             // precalculate
+            // this if needed? CHECK
             if (is_1patch(sid_sYlm_re[si][lm+off]))
             {
 

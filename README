@@ -1,35 +1,22 @@
-Cactus Code Thorn SphericalSlice
-Thorn Author(s)     : Christian Reisswig <reisswig@aei.mpg.de>
-Thorn Maintainer(s) : Christian Reisswig <reisswig@aei.mpg.de>
+Cactus Code Thorn SphericalIntegrator
+Thorn Author(s)     : Ludwig Jens Papenfort <papenfort@th.physik.uni-frankfurt.de>
+                      Elias Most            <most@fias.uni-frankfurt.de>
+Thorn Maintainer(s) : Ludwig Jens Papenfort <papenfort@th.physik.uni-frankfurt.de>
+                      Elias Most            <most@fias.uni-frankfurt.de>
+                      
 --------------------------------------------------------------------------
 
-Purpose of the thorn:
+This thorn is a fork of Christian Reisswigs (reisswig@aei.mpg.de) SphericalSlice,
+which itself is part of the Llama infrastructure.
 
-This thorn is ment as a generalization and replacement of SphericalSurface.
-
-Instead of defining the parameters of a surface alone, this thorn will also manage the storage of 
-the spherical slices so that other thorns doesn't need to do that themselves which makes it
-possible to parallelize the spherical slices efficiently once and for all.
-It also provides commonly used functions such as surface integration, decomposition, etc.
+It is meant to be an simplified generalization and replacement of SphericalSurface,
+incorporating integration and decomposition on spherical or elliptic surfaces.
+Additionally the storage and management of the spherical surfaces is parallelized.
 
 
-
-TODO:
+TODO (?):
 Synchronize only among those processors which are assigned for one sphere ->
 create a MPI communicator for each slice.
-
-6patches:
-Interpolation rouutines need to make use of Carpet's fasterp!
-
-6patches:
-Maybe before integrating interpolate to a point with standard spherical coordinates 
-and then do the Gauss sum. The incomplete function "interpolate(theta, phi)"
-could be used for that. Basically one would loop over spherical coordinates
-and before summing the current point, it will be first interpolated.
-OR:
-Use coefficients of diagonal SBP norms since they define
-integration coefficients of up to 8th-order. 
-
 
 Currently, interp-setup is forgotten whenever regridding occurs.
 It would however be much wiser to check which spheres intersect moving grids

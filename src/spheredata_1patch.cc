@@ -20,7 +20,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "spheredata_1patch.hh"
 
-namespace SPS {
+namespace SPI {
 
 
 template <typename T>
@@ -80,4 +80,4 @@ void spheredata_1patch<T>::output (io_base& io) const
   // Instantiate template
   template class spheredata_1patch<CCTK_REAL>;
   
-} // namespace SPS
+} // namespace SPI

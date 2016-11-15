@@ -25,7 +25,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 
 
-extern "C" void SphericalSlice_ParamCheck(CCTK_ARGUMENTS)
+extern "C" void SphericalIntegrator_ParamCheck(CCTK_ARGUMENTS)
 {
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
