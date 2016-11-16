@@ -57,11 +57,6 @@ extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
       vars[slices_1patch(i,0).ID()].push_back(i);
   }
 
-  for(int i = 0; i<nslices; ++i) {
-    CCTK_VWarn(1,__LINE__,__FILE__,CCTK_THORNSTRING,"Got %i vars for SN %i",vars[i].size(),i);
-  }
-
-
   // sync collectively vars on each sphere
   for(int i = 0; i<nslices; ++i) {
     // sync expects a pointer to an array, standard guarantees that vector is stored contiguously in memory
@@ -82,8 +77,6 @@ extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
       CCTK_REAL* result = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,output_index,NULL);
       // integrate and store result
       *result = slices_1patch(i, 0).integrate();
-
-      CCTK_VWarn(1,__LINE__,__FILE__,CCTK_THORNSTRING,"Got a result of %f for %s",*result,slices_1patch(i,0).outname().c_str());
     }
   }
 }
