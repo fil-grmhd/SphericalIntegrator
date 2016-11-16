@@ -68,3 +68,13 @@ SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_HasBeenSet
   OPTIONS: GLOBAL
 } "Check ss_info variables if those have been externally set and adapt internal variables accordingly."
 
+
+SCHEDULE GROUP SphericalIntegrator_UpdateGFs AT POSTSTEP AFTER SphericalIntegrator_HasBeenSet
+{
+} "Thorns using the integrator should schedule their point-wise GF update/calculations in this group."
+
+SCHEDULE SphericalIntegrator_CollectiveIntegration AT POSTSTEP AFTER SphericalIntegrator_UpdateGFs
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Interpolates (syncs) all registered GFs to the given spheres and integrates them."

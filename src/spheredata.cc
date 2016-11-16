@@ -21,8 +21,9 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "spheredata.hh"
 
 namespace SPI {
-  
+
   // Instantiate template
   template class spheredata<CCTK_REAL>;
-  
+
 } // namespace SPI
+

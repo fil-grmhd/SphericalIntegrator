@@ -107,7 +107,7 @@ class spheredata
 
             spheredata() { }
             spheredata(const string& varname_,
-                       const string& result_,
+                       const string& outname_,
                        const int id_,
                        const int ntheta_,
                        const int nphi_,
@@ -121,7 +121,7 @@ class spheredata
                        const distrib_method_t distrib_method_,
                        const vector<int>& processors_,
                        const bool can_use_Llama_)
-               : _varname(varname_), _result(result_), _id(id_), _name(varname_),
+               : _varname(varname_), _outname(outname_), _id(id_), _name(varname_),
                  _ntheta(ntheta_+2*nghosts_), _nphi(nphi_+2*nghosts_), _nghosts(nghosts_),
                  _radius(radius_), _origin(origin_),
                  _has_constant_radius(has_constant_radius_),
@@ -284,7 +284,7 @@ class spheredata
             string varname() const { return _varname; }
 
             /// returns the original name of the Cactus scalar that gets the integration result
-            string result() const { return _result; }
+            string outname() const { return _outname; }
 
             /// returns integration iteration number
             int integrate_every() const { return _integrate_every; }
@@ -404,7 +404,7 @@ class spheredata
             string _varname;
 
             /// the name of the Cactus scalar, where the integration result should be stored
-            string _result;
+            string _outname;
 
             /// how often should the GF be interpolated and integrated?
             int _integrate_every;

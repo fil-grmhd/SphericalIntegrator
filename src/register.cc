@@ -76,5 +76,5 @@ extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST var
    }
 
    // return the registered sliced variable number
-   return ONEPATCH_SLICE_IDS+slices_1patch.register_slice(varname_lowercase, result_lowercase, sn, timelevels, integrate_every, d_method);
+   return slices_1patch.register_slice(varname_lowercase, result_lowercase, sn, timelevels, integrate_every, d_method);
 }

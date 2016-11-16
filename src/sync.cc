@@ -41,9 +41,9 @@ extern "C" CCTK_INT SphericalIntegrator_Sync(const CCTK_POINTER_TO_CONST cctkGH_
 
    assert(varno >= 0);
 
-   assert(INDEX1P(varno) < slices_1patch.slice().size());
-   slices_1patch.cycle_timelevels(INDEX1P(varno));
-   slices_1patch(INDEX1P(varno), 0).interpolate(cctkGH);
+   assert(varno < slices_1patch.slice().size());
+   slices_1patch.cycle_timelevels(varno);
+   slices_1patch(varno, 0).interpolate(cctkGH);
 
    return 0;
 }
@@ -66,12 +66,12 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
    if (!use_carpet_interp1)
    {
       // make sure all variable numbers belong to the same slice!
-      const int ID = slices_1patch(INDEX1P(varno[0]), 0).ID();
+      const int ID = slices_1patch(varno[0], 0).ID();
       for (int i=1; i < number_of_vars; ++i)
       {
-         assert(ID == slices_1patch(INDEX1P(varno[i]), 0).ID());
-         assert(INDEX1P(varno[i]) < slices_1patch.slice().size());
-         slices_1patch.cycle_timelevels(INDEX1P(varno[i]));
+         assert(ID == slices_1patch(varno[i], 0).ID());
+         assert(varno[i] < slices_1patch.slice().size());
+         slices_1patch.cycle_timelevels(varno[i]);
       }
 
       // get the input variable's index
@@ -79,35 +79,35 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
 
       for (int i=0; i < number_of_vars; ++i)
       {
-         varindices[i] = CCTK_VarIndex(slices_1patch(INDEX1P(varno[i]), 0).varname().c_str());
+         varindices[i] = CCTK_VarIndex(slices_1patch(varno[i], 0).varname().c_str());
          if (varindices[i] < 0)
             CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
-                  "couldn't get index of slice variable '%s'", slices_1patch(INDEX1P(varno[i]), 0).varname().c_str());
+                  "couldn't get index of slice variable '%s'", slices_1patch(varno[i], 0).varname().c_str());
       }
 
       vector<CCTK_REAL*> values (number_of_vars, static_cast<CCTK_REAL*>(NULL));
 
       for (int i=0; i < number_of_vars; ++i)
-         values[i] = (CCTK_REAL*) slices_1patch(INDEX1P(varno[i]), 0).data_pointer();
+         values[i] = (CCTK_REAL*) slices_1patch(varno[i], 0).data_pointer();
 
       // set up the interpolation
-      assert(interp_setups.size() > slices_1patch(INDEX1P(varno[0]), 0).ID());
-      interp_setup_t* &interp_setup = interp_setups[slices_1patch(INDEX1P(varno[0]), 0).ID()];
+      assert(interp_setups.size() > slices_1patch(varno[0], 0).ID());
+      interp_setup_t* &interp_setup = interp_setups[slices_1patch(varno[0], 0).ID()];
       if (not interp_setup or interp_setup->fasterp_setup->outofdate()) {
          if (interp_setup)
            delete interp_setup;
-         interp_setup = new interp_setup_t(slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0] * slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[1]);
+         interp_setup = new interp_setup_t(slices_1patch(varno[0], 0).lsh(0)[0] * slices_1patch(varno[0], 0).lsh(0)[1]);
 
          // allocate storage for coordinates
          fasterp_glocs_t locations (interp_setup->npoints);
 
          // get Cartesian coordinate values of gridpoints on spherical surface
-         for (int j=0; j < slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[1]; ++j) {
-         for (int k=0; k < slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0]; ++k) {
-            const int l = k + slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0]*j;
-            double x = slices_1patch(INDEX1P(varno[0]), 0).cart_x(0, k, j);
-            double y = slices_1patch(INDEX1P(varno[0]), 0).cart_y(0, k, j);
-            double z = slices_1patch(INDEX1P(varno[0]), 0).cart_z(0, k, j);
+         for (int j=0; j < slices_1patch(varno[0], 0).lsh(0)[1]; ++j) {
+         for (int k=0; k < slices_1patch(varno[0], 0).lsh(0)[0]; ++k) {
+            const int l = k + slices_1patch(varno[0], 0).lsh(0)[0]*j;
+            double x = slices_1patch(varno[0], 0).cart_x(0, k, j);
+            double y = slices_1patch(varno[0], 0).cart_y(0, k, j);
+            double z = slices_1patch(varno[0], 0).cart_z(0, k, j);
             /*if (have_symmetries)
             {
                if (x < 0)
@@ -138,10 +138,10 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
 
       // do the interpolation
       assert(interp_setup->fasterp_setup);
-      assert(interp_setup->npoints == slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0] * slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[1]);
+      assert(interp_setup->npoints == slices_1patch(varno[0], 0).lsh(0)[0] * slices_1patch(varno[0], 0).lsh(0)[1]);
       interp_setup->fasterp_setup->interpolate (cctkGH, varindices, values);
 
-      if (not slices_1patch(INDEX1P(varno[0]), 0).has_constant_radius()) {
+      if (not slices_1patch(varno[0], 0).has_constant_radius()) {
          delete interp_setup;
          interp_setup = NULL;
       }
@@ -150,12 +150,12 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
    if(use_carpet_interp1)
    {
       // make sure all variable numbers belong to the same slice!
-      const int ID = slices_1patch(INDEX1P(varno[0]), 0).ID();
+      const int ID = slices_1patch(varno[0], 0).ID();
       for (int i=1; i < number_of_vars; ++i)
       {
-         assert(ID == slices_1patch(INDEX1P(varno[i]), 0).ID());
-         assert(INDEX1P(varno[i]) < slices_1patch.slice().size());
-         slices_1patch.cycle_timelevels(INDEX1P(varno[i]));
+         assert(ID == slices_1patch(varno[i], 0).ID());
+         assert(varno[i] < slices_1patch.slice().size());
+         slices_1patch.cycle_timelevels(varno[i]);
       }
 
       const void*   interp_coords[N_DIMS];
@@ -179,7 +179,7 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
 
       for (int i=0; i < number_of_vars; ++i)
       {
-         input_array_indices[i] = CCTK_VarIndex(slices_1patch(INDEX1P(varno[i]), 0).varname().c_str());
+         input_array_indices[i] = CCTK_VarIndex(slices_1patch(varno[i], 0).varname().c_str());
          if (input_array_indices[i] < 0)
             CCTK_WARN(0, "error getting VarIndex of variable that shall be sliced");
       }
@@ -189,8 +189,8 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
      // the spherical grid from neighboring gridpoints of the Cartesian grid.
      // for this, we first calculate the Cartesian coordinate of the jk-th spherical
      // surface gridpoint
-     int n_interp_points = slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0]
-                          *slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[1];
+     int n_interp_points = slices_1patch(varno[0], 0).lsh(0)[0]
+                          *slices_1patch(varno[0], 0).lsh(0)[1];
                           //lsh(m)[0]*lsh(m)[1];
 
      // Arrays of Cartesian coordinates of the surface points onto which we want to interpolate
@@ -199,13 +199,13 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
      vector<CCTK_REAL> interp_z(n_interp_points, POISON_VAL);
 
      // get Cartesian coordinate values of gridpoints on spherical surface
-     for (int j=0; j < slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[1]; ++j)
-        for (int k=0; k < slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0]; ++k)
+     for (int j=0; j < slices_1patch(varno[0], 0).lsh(0)[1]; ++j)
+        for (int k=0; k < slices_1patch(varno[0], 0).lsh(0)[0]; ++k)
         {
-           const int l = k + slices_1patch(INDEX1P(varno[0]), 0).lsh(0)[0]*j;
-           interp_x[l] = slices_1patch(INDEX1P(varno[0]), 0).cart_x(0, k, j);
-           interp_y[l] = slices_1patch(INDEX1P(varno[0]), 0).cart_y(0, k, j);
-           interp_z[l] = slices_1patch(INDEX1P(varno[0]), 0).cart_z(0, k, j);
+           const int l = k + slices_1patch(varno[0], 0).lsh(0)[0]*j;
+           interp_x[l] = slices_1patch(varno[0], 0).cart_x(0, k, j);
+           interp_y[l] = slices_1patch(varno[0], 0).cart_y(0, k, j);
+           interp_z[l] = slices_1patch(varno[0], 0).cart_z(0, k, j);
         }
 
      interp_coords[0] = (const void*) &interp_x.front();
@@ -213,7 +213,7 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
      interp_coords[2] = (const void*) &interp_z.front();
 
      for (int i=0; i < number_of_vars; ++i)
-        output_arrays[i] = slices_1patch(INDEX1P(varno[i]), 0).data_pointer();
+        output_arrays[i] = slices_1patch(varno[i], 0).data_pointer();
 
      // Do the actual interpolation.
      // Only those processes interpolate that contain data

@@ -25,7 +25,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 namespace SPI {
 
 template <class SD>
-int slices<SD>::register_slice(const string& varname, const string& result, int const slice_parameter_no, int const timelevels, int const integrate_every, const distrib_method_t distrib_method)
+int slices<SD>::register_slice(const string& varname, const string& outname, int const slice_parameter_no, int const timelevels, int const integrate_every, const distrib_method_t distrib_method)
             {
                DECLARE_CCTK_PARAMETERS
                // shortcut
@@ -68,7 +68,7 @@ int slices<SD>::register_slice(const string& varname, const string& result, int 
 
                // set up new slice, get storage and distribute it
                // over a defined group of processors
-               SD sd(varname, result, sn,
+               SD sd(varname, outname, sn,
                      ntheta_internal[sn], nphi_internal[sn], nghostzones[sn],
                      radius_internal[sn], radii,
                      vect<CCTK_REAL,3>(origin_x[sn], origin_y[sn], origin_z[sn]),

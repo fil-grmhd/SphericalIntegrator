@@ -1,4 +1,5 @@
 
+
 /* Copyright 2013 Peter Diener, Nils Dorband, Roland Haas, Ian Hinder,
 Christian Ott, Denis Pollney, Thomas Radke, Christian Reisswig, Erik
 Schnetter, Barry Wardell and Burkhard Zink
@@ -63,7 +64,7 @@ template <class SD>
 class slices
 {
    public :
-            slices() : _slice(0), proc_load(0) 
+            slices() : _slice(0), proc_load(0)
             { }
 /*
             slices(const vector<SD>& slice_) : _slice(slice_), proc_load(0)
@@ -97,7 +98,7 @@ class slices
                if (_slice[i].size() > 1)
                {
                   // create new slice by using parameters of the most recent timelevel
-                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().result(), _slice[i].front().ID(),
+                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().outname(), _slice[i].front().ID(),
                                           _slice[i].front().npoints()[0], _slice[i].front().npoints()[1], _slice[i].front().nghosts(),
                                           _slice[i].front().radius(0, 0, 0),
                                           _slice[i].front().radius_pointer(),
@@ -165,13 +166,6 @@ class slices
 
 
 
-/// 1-patch slice identity numbers are between 0-10000
-#define ONEPATCH_SLICE_IDS 0
-/// 2-patch slice identity numbers are between 10000-20000
-#define TWOPATCH_SLICE_IDS 10000
-/// 6-patch slice identity numbers are above 20000
-#define SIXPATCH_SLICE_IDS 20000
-
 /// all slices for 1patch systems.
 extern slices<spheredata_1patch<CCTK_REAL> > slices_1patch;
 
@@ -182,15 +176,12 @@ typedef spheredata_1patch<CCTK_REAL>::integrator integrator_1patch;
 typedef spheredata_1patch<CCTK_REAL>::const_iter const_iter_1patch;
 typedef spheredata_1patch<CCTK_REAL>::iter       iter_1patch;
 
-#define INDEX1P(x) x-ONEPATCH_SLICE_IDS
-#define INDEX2P(x) x-TWOPATCH_SLICE_IDS
-#define INDEX6P(x) x-SIXPATCH_SLICE_IDS
-
+#define INDEX1P(x) x
 
 /// given a variable-number we check if this is a 1-patch slice
 inline bool is_1patch(CCTK_INT varno)
 {
-   if (varno >= ONEPATCH_SLICE_IDS && varno < TWOPATCH_SLICE_IDS)
+   if (varno >= 0 && varno < 10000)
       return true;
    return false;
 }
