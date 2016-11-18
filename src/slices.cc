@@ -25,8 +25,13 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 namespace SPI {
 
 template <class SD>
-int slices<SD>::register_slice(const string& varname, const string& outname, int const slice_parameter_no, int const timelevels, int const integrate_every, const distrib_method_t distrib_method)
-            {
+int slices<SD>::register_slice(const string& varname,
+                               const string& outname,
+                               int const slice_parameter_no,
+                               int const timelevels,
+                               int const integrate_every,
+                               int const interpolate_every,
+                               const distrib_method_t distrib_method) {
                DECLARE_CCTK_PARAMETERS
                // shortcut
                const int sn = slice_parameter_no;
@@ -75,9 +80,9 @@ int slices<SD>::register_slice(const string& varname, const string& outname, int
                      set_spherical[sn],
                      vect<bool,3>(false),  // don't consider symmetries for now.
                      integrate_every,
+                     interpolate_every,
                      distrib_method,
-                     processors,
-                     can_use_Llama_internal[sn]);
+                     processors);
 
                // copy slice to past timelevels
                for (int i=0; i < timelevels; ++i)

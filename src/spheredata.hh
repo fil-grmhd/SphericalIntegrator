@@ -118,17 +118,18 @@ class spheredata
                        const bool has_constant_radius_,
                        const vect<bool, 3>& symmetry_,
                        const int integrate_every_,
+                       const int interpolate_every_,
                        const distrib_method_t distrib_method_,
-                       const vector<int>& processors_,
-                       const bool can_use_Llama_)
+                       const vector<int>& processors_)
                : _varname(varname_), _outname(outname_), _id(id_), _name(varname_),
                  _ntheta(ntheta_+2*nghosts_), _nphi(nphi_+2*nghosts_), _nghosts(nghosts_),
                  _radius(radius_), _origin(origin_),
                  _has_constant_radius(has_constant_radius_),
-                 _symmetry(symmetry_), _integrate_every(integrate_every_),_distrib_method(distrib_method_),
-                 _processors(processors_),
-                 _can_use_Llama(can_use_Llama_)
-
+                 _symmetry(symmetry_),
+                 _integrate_every(integrate_every_),
+                 _interpolate_every(interpolate_every_),
+                 _distrib_method(distrib_method_),
+                 _processors(processors_)
             {
                stringstream str;
                str << "slice=" << id_ << "::" << _name;
@@ -289,6 +290,9 @@ class spheredata
             /// returns integration iteration number
             int integrate_every() const { return _integrate_every; }
 
+            /// returns interpolation iteration number
+            int interpolate_every() const { return _interpolate_every; }
+
             /// returns the ID of the slice == n-th spherical slice in parfile
             int ID() const { return _id; }
 
@@ -300,9 +304,6 @@ class spheredata
 
             /// a group of processors that carry parts of the slice
             vector<int> processors() const { return _processors; }
-
-            /// this returns whether this slice can in principle take advantage of Llama.
-            bool can_use_Llama() const { return _can_use_Llama; }
 
             /// write the SphereData including all attributes
             /// to the output stream defined by io_base (or its inheritants)
@@ -406,8 +407,11 @@ class spheredata
             /// the name of the Cactus scalar, where the integration result should be stored
             string _outname;
 
-            /// how often should the GF be interpolated and integrated?
+            /// how often should the GF be integrated?
             int _integrate_every;
+
+            /// how often should the GF be interpolated?
+            int _interpolate_every;
 
             /// a constant radius
             CCTK_REAL _radius;
@@ -420,11 +424,6 @@ class spheredata
 
             /// the number of ghostpoints for each patch and direction
             int _nghosts;
-
-            /// this flag is set initialy according to
-            /// whether Llama is activated, the origin is 0, radius=const,
-            /// and whether this slice lies on a Llama radial gridpoint.
-            bool _can_use_Llama;
 
             /// the processor-ids among which to distribute the slice
             vector<int> _processors;

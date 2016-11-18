@@ -34,13 +34,6 @@ namespace SPI {
 using namespace std;
 
 
-/// a flag that states whether multipatch is activated or not.
-extern bool Llama_activated;
-
-
-/// a flag for each of the slices defining whether it can take advantage of Llama
-extern vector<bool> can_use_Llama_internal;
-
 /// a new radius for the slices that don't exactly lie on Llama radial-gridpoints
 /// but not insist of sticking to the given radius so that we can shift the sphere radius
 /// to the closest available Llama radial-gridpoint.
@@ -89,7 +82,13 @@ class slices
 
             /// create storage for a new slice with some timelevels as decribed by the n-th parameter in the parfile
             /// and return the slice-id
-            int register_slice(const string& varname, const string& result, int const slice_parameter_no, int const timelevels, int const integrate_every, const distrib_method_t distrib_method);
+            int register_slice(const string& varname,
+                               const string& result,
+                               int const slice_parameter_no,
+                               int const timelevels,
+                               int const integrate_every,
+                               int const interpolate_every,
+                               const distrib_method_t distrib_method);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
             void cycle_timelevels(const int i)
@@ -106,9 +105,9 @@ class slices
                                           _slice[i].front().has_constant_radius(),
                                           _slice[i].front().symmetry(),
                                           _slice[i].front().integrate_every(),
+                                          _slice[i].front().interpolate_every(),
                                           _slice[i].front().distrib_method(),
-                                          _slice[i].front().processors(),
-                                          _slice[i].front().can_use_Llama()));
+                                          _slice[i].front().processors()));
                   // remove last timelevel
                   _slice[i].pop_back();
                }

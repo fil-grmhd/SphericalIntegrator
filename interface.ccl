@@ -14,23 +14,35 @@ PUBLIC:
 
 # Register a Cactus variable for being sliced and return registration number
 # Parameters are name of the grid function (varname), 
-# name of the scalar where the result should be stored (result),
+# name of the scalar where the result should be stored (outname),
 # sphereid of the sphere over which will be integrated (sn),
 # number of timelevels to keep on the sphere (timelevels),
-# how often should be integrated (integrate_every)
+# how often should be integrated (integrate_every),
+# how often should be interpolated (interpolate_every),
 # and the distribution method of the sphere data (distrib_method)
+
+# Remarks:
+# A value of 0 for the _every parameters means NEVER.
+# If the goal is to integrate a simple GF on the sphere,
+# both _every parameters should be equal. Remeber that all refinement lvls
+# have to be evolved to the same timestep, to get a reasonable result.
+
+# Integration is done automatically by the IntegrateCollectively routine.
 
 CCTK_INT FUNCTION \
     SphericalIntegrator_RegisterVariable(CCTK_POINTER_TO_CONST IN varname, \
-	                                       CCTK_POINTER_TO_CONST IN result, \
-	                                       CCTK_INT IN sn, \
+                                         CCTK_POINTER_TO_CONST IN outname, \
+                                         CCTK_INT IN sn, \
                                          CCTK_INT IN timelevels, \
                                          CCTK_INT IN integrate_every, \
-	                                       CCTK_POINTER_TO_CONST IN distrib_method)
+                                         CCTK_INT IN interpolate_every, \
+                                         CCTK_POINTER_TO_CONST IN distrib_method)
 PROVIDES FUNCTION SphericalIntegrator_RegisterVariable \
     WITH SphericalIntegrator_Register \
     LANGUAGE C
 
+
+## Following functions are only needed for manual integration/sync etc.
 
 # Return Surface-Integral over sliced variable. 
 CCTK_REAL FUNCTION \
@@ -156,17 +168,3 @@ CCTK_INT ss_shape_descriptors[nslices] TYPE=scalar
 {
   ss_ntheta, ss_nphi, ss_npatches
 } "The shape of the surfaces, ie. number of points per patch and number of patches"
-
-
-
-PRIVATE:
-
-
-CCTK_INT can_use_Llama[nslices] TYPE=scalar "Whether this slice can use Llama"
-CCTK_REAL new_radius[nslices] TYPE=scalar "A new radius according to the next closest radial Llama gridpoint"
-
-
-
-
-
-

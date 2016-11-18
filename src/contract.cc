@@ -300,8 +300,8 @@ void precalc_sYlm(const CCTK_INT si, const int s, const int lmin, const int lmax
          for (int m=0; m <= l; ++m)  // we only need to store +m modes because -m can be recovered from them via CC!
          {
             // register
-            sid_sYlm_re[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_re", "none", si, 1, 1, "const");
-            sid_sYlm_im[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_im", "none", si, 1, 1, "const");
+            sid_sYlm_re[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_re", "none", si, 1, 1, 1, "const");
+            sid_sYlm_im[si][lm+off] = SphericalIntegrator_RegisterVariable("sYlm_im", "none", si, 1, 1, 1, "const");
 
             // precalculate
             // this if needed? CHECK

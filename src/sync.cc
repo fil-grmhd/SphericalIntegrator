@@ -239,3 +239,29 @@ extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CON
 
    return 0;
 }
+
+
+extern "C" void SphericalIntegrator_CollectiveInterpolation(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS
+  DECLARE_CCTK_PARAMETERS
+
+  vector<CCTK_INT> vars[nslices];
+
+  // collect all vars and sort them to their sphere ID
+  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
+    // only interpolate if it is wanted
+    if((slices_1patch(i,0).interpolate_every() != 0)
+      && (cctk_iteration % slices_1patch(i,0).interpolate_every() == 0))
+        vars[slices_1patch(i,0).ID()].push_back(i);
+  }
+
+  // sync collectively vars on each sphere
+  for(int i = 0; i<nslices; ++i) {
+    // sync expects a pointer to an array
+    // (standard guarantees that vector is stored contiguously in memory)
+    CCTK_INT* vars_ptr = &vars[i][0];
+    // sync checks that all vars on the same sphere
+    SphericalIntegrator_CollectiveSync(cctkGH,vars_ptr,vars[i].size());
+  }
+
+}

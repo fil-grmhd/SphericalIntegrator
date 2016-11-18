@@ -47,9 +47,6 @@ slices<spheredata_1patch<CCTK_REAL> > slices_1patch;
 slices<spheredata_1patch<CCTK_REAL> > radius_1patch;
 
 
-/// a flag for each of the slices defining whether it can take advantage of Llama
-vector<bool> can_use_Llama_internal;
-
 /// a new radius for the slices that don't exactly lie on Llama radial-gridpoints
 /// but not insist of sticking to the given radius so that we can shift the sphere radius
 /// to the closest available Llama radial-gridpoint.
@@ -62,11 +59,6 @@ vector<int> nphi_internal;
 
 /// a vector that stores for each slice-no the pointer to the radius storage.
 vector<void*> radius_pointers;
-
-
-/// if a Multipatch system is present that supports Thornburg04-coordinates,
-/// the Llama gets activated
-bool Llama_activated = false;
 
 /// interpolation order to be used
 int interpolator_order;
@@ -86,9 +78,6 @@ extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
 
    CCTK_INFO("Basic setup of slices.");
 
-   Llama_activated = false;
-
-   can_use_Llama_internal = vector<bool>(nslices, false);
    radius_internal = vector<CCTK_REAL>(nslices, 0);
    ntheta_internal = vector<int>(nslices, 0);
    nphi_internal = vector<int>(nslices, 0);
@@ -97,10 +86,8 @@ extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
    // now check each slice
    for (int i=0; i < nslices; ++i)
    {
-      can_use_Llama[i] = false;
       // set new radius and resolution
       // just use given settings
-      new_radius[i] = radius[i];
       ss_ntheta[i] = ntheta[i];
       ss_nphi[i] = nphi[i];
 
@@ -117,7 +104,7 @@ extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
       {
          ss_area[i] = 4 * pi * pow (radius[i], 2);
 
-         ss_mean_radius[i] = new_radius[i];
+         ss_mean_radius[i] = radius[i];
 
          ss_centroid_x[i] = origin_x[i];
          ss_centroid_y[i] = origin_y[i];
@@ -130,15 +117,15 @@ extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
          ss_quadrupole_yz[i] = 0.0;
          ss_quadrupole_zz[i] = 0.0;
 
-         ss_min_radius[i] = new_radius[i];
-         ss_max_radius[i] = new_radius[i];
+         ss_min_radius[i] = radius[i];
+         ss_max_radius[i] = radius[i];
 
-         ss_min_x[i] = origin_x[i] - new_radius[i];
-         ss_min_y[i] = origin_y[i] - new_radius[i];
-         ss_min_z[i] = origin_z[i] - new_radius[i];
-         ss_max_x[i] = origin_x[i] + new_radius[i];
-         ss_max_y[i] = origin_y[i] + new_radius[i];
-         ss_max_z[i] = origin_z[i] + new_radius[i];
+         ss_min_x[i] = origin_x[i] - radius[i];
+         ss_min_y[i] = origin_y[i] - radius[i];
+         ss_min_z[i] = origin_z[i] - radius[i];
+         ss_max_x[i] = origin_x[i] + radius[i];
+         ss_max_y[i] = origin_y[i] + radius[i];
+         ss_max_z[i] = origin_z[i] + radius[i];
 
          // radii/origins are valid
          ss_active[i] = 1;
@@ -191,7 +178,6 @@ extern "C" void SphericalIntegrator_PostSetup(CCTK_ARGUMENTS)
 
    CCTK_INFO("Setup radius of slices.");
 
-   can_use_Llama_internal = vector<bool>(nslices, false);
    radius_internal = vector<CCTK_REAL>(nslices, 0);
    ntheta_internal = vector<int>(nslices, 0);
    nphi_internal = vector<int>(nslices, 0);
@@ -201,13 +187,12 @@ extern "C" void SphericalIntegrator_PostSetup(CCTK_ARGUMENTS)
    {
       ntheta_internal[i] = ss_ntheta[i];
       nphi_internal[i] = ss_nphi[i];
-      can_use_Llama_internal[i] = can_use_Llama[i];
-      radius_internal[i] = new_radius[i];
+      radius_internal[i] = radius[i];
 
       // We are now going to set up the radii as separately registered slice for each slice
       // Each processor should have the radius available. That means we gonna use a constant distribution.
       //ss_radius_id[i] = SphericalIntegrator_Register("ss_radius", i, 1, "const");
-      ss_radius_id[i] = radius_1patch.register_slice("ss_radius", "none", i, 1, 1, constant);
+      ss_radius_id[i] = radius_1patch.register_slice("ss_radius", "none", i, 1, 1, 1, constant);
 
       if (set_elliptic[i])
       {

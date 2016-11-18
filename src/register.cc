@@ -31,16 +31,17 @@ using namespace SPI;
 
 
 extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST varname,
-                                                 const CCTK_POINTER_TO_CONST result,
+                                                 const CCTK_POINTER_TO_CONST outname,
                                                  const CCTK_INT sn,
                                                  const CCTK_INT timelevels,
                                                  const CCTK_INT integrate_every,
+                                                 const CCTK_INT interpolate_every,
                                                  const CCTK_POINTER_TO_CONST distrib_method)
 {
    DECLARE_CCTK_PARAMETERS
 
    const char* _varname = (char*) varname;
-   const char* _result = (char*) result;
+   const char* _outname = (char*) outname;
    const char* _distrib_method = (char*) distrib_method;
 
    assert(_varname != NULL);
@@ -68,13 +69,13 @@ extern "C" CCTK_INT SphericalIntegrator_Register(const CCTK_POINTER_TO_CONST var
       varname_lowercase[i] = tolower(_varname[i]);
    }
 
-   string result_lowercase(_result);
+   string outname_lowercase(_outname);
 
-   for (int i=0; _result[i]; ++i)
+   for (int i=0; _outname[i]; ++i)
    {
-      result_lowercase[i] = tolower(_result[i]);
+      outname_lowercase[i] = tolower(_outname[i]);
    }
 
    // return the registered sliced variable number
-   return slices_1patch.register_slice(varname_lowercase, result_lowercase, sn, timelevels, integrate_every, d_method);
+   return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, timelevels, integrate_every, interpolate_every, d_method);
 }

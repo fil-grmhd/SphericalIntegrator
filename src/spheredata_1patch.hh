@@ -80,13 +80,13 @@ class spheredata_1patch : public spheredata<T>
                               const bool has_constant_radius_,
                               const vect<bool, 3>& symmetry_,
                               const int integrate_every_,
+                              const int interpolate_every_,
                               const distrib_method_t distrib_method_,
-                              const vector<int>& processors_,
-                              const bool can_use_Llama_)
+                              const vector<int>& processors_)
                // call base class contructor
                : spheredata<T>(varname_, result_, id_, ntheta_, nphi_, nghosts_, radius_, radii_,
                                origin_, has_constant_radius_, symmetry_, integrate_every_,
-                               distrib_method_, processors_, can_use_Llama_),
+                               interpolate_every_, distrib_method_, processors_),
                // initialize members
                  _lsh(vect<int,2>(ntheta_+2*nghosts_, nphi_+2*nghosts_)),
                  _gsh(vect<int,2>(ntheta_+2*nghosts_, nphi_+2*nghosts_)),
