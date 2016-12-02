@@ -27,34 +27,16 @@ namespace SPI {
 template <class SD>
 int slices<SD>::register_slice(const string& varname,
                                const string& outname,
-                               int const slice_parameter_no,
-                               int const timelevels,
-                               int const integrate_every,
-                               int const interpolate_every,
+                               const int slice_parameter_no,
+                               const int integrate_every,
+                               const int interpolate_every,
+                               const integration_t integration_type,
                                const distrib_method_t distrib_method) {
                DECLARE_CCTK_PARAMETERS
                // shortcut
                const int sn = slice_parameter_no;
 
                assert(slice_parameter_no < nslices);
-               assert(timelevels > 0);
-
-               // check if slice is already registered...
-               if (enforce_single_registration)
-               {
-                  for (int i=0; i < _slice.size(); ++i)
-                  {
-                     if (varname == _slice[i][0].varname() && sn == _slice[i][0].ID() && distrib_method == _slice[i][0].distrib_method())
-                     {
-                        // if necessary add more timelevels
-                        if (_slice[i].size() < timelevels)
-                        {
-                           _slice[i].resize(timelevels, _slice[i][0]);
-                        }
-                        return i;
-                     }
-                  }
-               }
 
                _slice.resize(_slice.size()+1);
 
@@ -81,12 +63,11 @@ int slices<SD>::register_slice(const string& varname,
                      vect<bool,3>(false),  // don't consider symmetries for now.
                      integrate_every,
                      interpolate_every,
+                     integration_type,
                      distrib_method,
                      processors);
 
-               // copy slice to past timelevels
-               for (int i=0; i < timelevels; ++i)
-                  _slice[cs].push_back(sd);
+               _slice[cs].push_back(sd);
 
                return _slice.size()-1;
             }

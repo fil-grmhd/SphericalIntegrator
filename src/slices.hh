@@ -27,7 +27,6 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "mpi.h"
 #include "spheredata_1patch.hh"
 
-
 namespace SPI {
 
 
@@ -85,9 +84,9 @@ class slices
             int register_slice(const string& varname,
                                const string& result,
                                int const slice_parameter_no,
-                               int const timelevels,
                                int const integrate_every,
                                int const interpolate_every,
+                               const integration_t integration_type,
                                const distrib_method_t distrib_method);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
@@ -121,6 +120,10 @@ class slices
             vector<int> get_processors(const int sn, const distrib_method_t distrib_method)
             {
                DECLARE_CCTK_PARAMETERS
+               // return, if no procs are needed (i.e. vol integral)
+               if(distrib_method == undefined)
+                return 0;
+
                int nprocs = 1;
                MPI_Comm_size ( MPI_COMM_WORLD, &nprocs );
 

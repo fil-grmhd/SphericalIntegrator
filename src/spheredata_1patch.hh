@@ -81,12 +81,14 @@ class spheredata_1patch : public spheredata<T>
                               const vect<bool, 3>& symmetry_,
                               const int integrate_every_,
                               const int interpolate_every_,
+                              const integration_t integration_type_,
                               const distrib_method_t distrib_method_,
                               const vector<int>& processors_)
                // call base class contructor
                : spheredata<T>(varname_, result_, id_, ntheta_, nphi_, nghosts_, radius_, radii_,
                                origin_, has_constant_radius_, symmetry_, integrate_every_,
-                               interpolate_every_, distrib_method_, processors_),
+                               interpolate_every_, integration_type_,
+                               distrib_method_, processors_),
                // initialize members
                  _lsh(vect<int,2>(ntheta_+2*nghosts_, nphi_+2*nghosts_)),
                  _gsh(vect<int,2>(ntheta_+2*nghosts_, nphi_+2*nghosts_)),
@@ -94,6 +96,7 @@ class spheredata_1patch : public spheredata<T>
                  _ubnd(vect<int,2>(ntheta_-1+2*nghosts_, nphi_-1+2*nghosts_)),
                  _dtheta(PI/(ntheta_)),
                  _dphi(2.0*PI/(nphi_)),
+                 _tmp_gf_pointer(NULL),
                // CHECK why this casting?
                  _radii(reinterpret_cast<CCTK_REAL*>(radii_))
             {
@@ -249,6 +252,14 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL& radius(const const_iter& i)
             {
                return radius(i.idx().p, i.idx().i, i.idx().j);
+            }
+
+            /// return pointer to temporary GF, used for volume integration
+            CCTK_REAL*& tmp_gf_pointer() {
+               return _tmp_gf_pointer;
+            }
+            CCTK_REAL*& tmp_gf_pointer() const {
+               return _tmp_gf_pointer;
             }
 
             /// return pointer to surface radius data
@@ -441,9 +452,31 @@ class spheredata_1patch : public spheredata<T>
               }
             }
 
-            /// surface integral over slice
-            CCTK_REAL integrate() const
+            /// volume integral over slice
+            CCTK_REAL integrate_volume(const CCTK_INT sum_reduction_handle, const CCTK_INT dx3) const
             {
+              if(this->integration_type() != volume)
+                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as volume integral to make a volume integration",this->varname.c_str());
+              if(this->tmp_gf_pointer() == NULL)
+                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Volume sync was skipped or something went wrong, temporary gf pointer missing.");
+
+              CCTK_REAL result;
+              // call reduction
+              const int ierr = CCTK_Reduce(cctkGH, -1, sum_reduction_handle, 1, CCTK_VARIABLE_REAL, &result, 1, this->tmp_gf_pointer());
+              // multiply by grid spacing
+              result *= dx3;
+              // check for errors
+              if(ierr_adm || ierr_komar || ierr_shibata)
+                CCTK_WARN(0,"SphericalIntegrator: One of the reductions in volume integration failed.");
+              return result;
+            }
+
+            /// surface integral over slice
+            CCTK_REAL integrate_surface() const
+            {
+               if(this->integration_type() != volume)
+                 CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as surface integral to make a surface integration",this->varname.c_str());
+
                CCTK_REAL result = 0;
 
                //if (data.size() > 0)
@@ -1027,6 +1060,9 @@ class spheredata_1patch : public spheredata<T>
             }
             /// the data of the entire sphere
             vector<T> data;
+
+            /// index to temporary GF, used in volume integration
+            CCTK_REAL* _tmp_gf_pointer;
 
             /// the pointer to the radii of this slice number at each point if requested
             CCTK_REAL* _radii;

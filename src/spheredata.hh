@@ -62,6 +62,10 @@ static const CCTK_REAL PI = 4.0*atan(1.0);
 //                      single:   only one processor contains the sphere
 enum distrib_method_t { constant, split, single, undefined };
 
+// integration type:    volume:  volume integral in sphere
+//                      surface: surface integral on sphere
+enum integration_t { volume, surface, undefined };
+
 
 /// conversion to C++ vector
 template<typename T, int D>
@@ -119,6 +123,7 @@ class spheredata
                        const vect<bool, 3>& symmetry_,
                        const int integrate_every_,
                        const int interpolate_every_,
+                       const integration_t integration_type_,
                        const distrib_method_t distrib_method_,
                        const vector<int>& processors_)
                : _varname(varname_), _outname(outname_), _id(id_), _name(varname_),
@@ -128,6 +133,7 @@ class spheredata
                  _symmetry(symmetry_),
                  _integrate_every(integrate_every_),
                  _interpolate_every(interpolate_every_),
+                 _integration_type(integration_type_),
                  _distrib_method(distrib_method_),
                  _processors(processors_)
             {
@@ -302,6 +308,9 @@ class spheredata
             /// returns the distribution method
             distrib_method_t distrib_method() const { return _distrib_method; }
 
+            /// returns the integration type
+            integration_t integration_type() const { return _integration_type; }
+
             /// a group of processors that carry parts of the slice
             vector<int> processors() const { return _processors; }
 
@@ -391,6 +400,9 @@ class spheredata
 
             /// the distribution method
             distrib_method_t _distrib_method;
+
+            /// the integration type
+            integration_t _integration_type;
 
             ///...and the corresponding process that carries the data
             int _proc_id;

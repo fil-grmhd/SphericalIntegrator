@@ -3,6 +3,10 @@
 
 RESTRICTED:
 
+CCTK_INT verbose "How verbose should the output be?"
+{
+  0:2 :: "Multiple lvls of verbosity"
+} 0
 
 CCTK_INT nslices "The number of different slices"
 {
@@ -89,6 +93,10 @@ CCTK_REAL radius_z[42] "Radius for surface" STEERABLE=always
   * :: "radius"
 } 0.0
 
+CCTK_INT max_volume_integrals "Maximum number of volume integrals (in total)" STEERABLE=always
+{
+  1:* :: "number of GFs"   
+} 20
 
 
 BOOLEAN enforce_single_registration "If set to yes, this will allocate memory only once per slice and variable. It has the disadvantage that if some other thorn triggers a synchronization for the same slice and variable your results may get spoiled."
@@ -99,11 +107,3 @@ BOOLEAN enforce_single_registration "If set to yes, this will allocate memory on
 BOOLEAN use_carpet_interp1 "use carpet interp1 if you need proper accounting of symmetries and/or time interpolation"
 {
 } no
-
-
-
-
-
-
-
-
