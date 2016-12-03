@@ -2,7 +2,7 @@ PROVIDES SphericalIntegrator
 {
 }
 
-REQUIRES Carpet HDF5 MPI Grid
+REQUIRES Carpet HDF5 MPI CPPUtils
 
 REQUIRES THORNS: CarpetInterp2
 

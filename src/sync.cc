@@ -288,7 +288,7 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
 
   // check if enough tmp GFs are available
   if(vol_vars.size() > max_volume_integrals)
-    CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please increase max_volume_integrals parameter to at least %i",vol_vars.size());
+    CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please increase max_volume_integrals parameter to at least %i",(int) vol_vars.size());
 
   // get index size of GFs
   const CCTK_INT gf_size = UTILS_GFSIZE(cctkGH);

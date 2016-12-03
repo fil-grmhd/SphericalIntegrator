@@ -258,7 +258,7 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL*& tmp_gf_pointer() {
                return _tmp_gf_pointer;
             }
-            CCTK_REAL*& tmp_gf_pointer() const {
+            CCTK_REAL* tmp_gf_pointer() const {
                return _tmp_gf_pointer;
             }
 
@@ -453,10 +453,10 @@ class spheredata_1patch : public spheredata<T>
             }
 
             /// volume integral over slice
-            CCTK_REAL integrate_volume(const CCTK_INT sum_reduction_handle, const CCTK_INT dx3) const
+            CCTK_REAL integrate_volume(const cGH* const cctkGH, const CCTK_INT sum_reduction_handle, const CCTK_INT dx3) const
             {
               if(this->integration_type() != volume)
-                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as volume integral to make a volume integration",this->varname.c_str());
+                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as volume integral to make a volume integration",this->varname().c_str());
               if(this->tmp_gf_pointer() == NULL)
                 CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Volume sync was skipped or something went wrong, temporary gf pointer missing.");
 
@@ -466,7 +466,7 @@ class spheredata_1patch : public spheredata<T>
               // multiply by grid spacing
               result *= dx3;
               // check for errors
-              if(ierr_adm || ierr_komar || ierr_shibata)
+              if(ierr)
                 CCTK_WARN(0,"SphericalIntegrator: One of the reductions in volume integration failed.");
               return result;
             }
@@ -475,7 +475,7 @@ class spheredata_1patch : public spheredata<T>
             CCTK_REAL integrate_surface() const
             {
                if(this->integration_type() != volume)
-                 CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as surface integral to make a surface integration",this->varname.c_str());
+                 CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please register variable '%s' as surface integral to make a surface integration",this->varname().c_str());
 
                CCTK_REAL result = 0;
 

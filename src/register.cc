@@ -78,7 +78,7 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeIntegral(const CCTK_POINTE
 
    // integration type
    integration_t i_type = volume;
-   distrib_method_t d_method = undefined;
+   distrib_method_t d_method = undefined_distrib;
 
    // return the registered sliced variable number
    return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, integrate_every, 0, i_type, d_method);
@@ -118,7 +118,7 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceIntegral(const CCTK_POINT
    }
 
 
-   distrib_method_t d_method = undefined;
+   distrib_method_t d_method = undefined_distrib;
    if (CCTK_Equals(_distrib_method, "const"))
       d_method = constant;
    if (CCTK_Equals(_distrib_method, "single"))
@@ -126,8 +126,8 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceIntegral(const CCTK_POINT
    if (CCTK_Equals(_distrib_method, "split"))
       d_method = split;
 
-   if(d_method == undefined)
-      CCTK_WARN(0, "Unkown distribution method! Expecting const, single or split.");
+   if(d_method == undefined_distrib)
+      CCTK_WARN(0, "Unkown distribution method! Expecting one defined in spheredata.hh as distrib_t.");
 
    // convert varname to lowercase
    // why? CHECK

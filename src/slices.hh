@@ -24,6 +24,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <cctk.h>
 #include <vector>
+#include <utils.hh>
 #include "mpi.h"
 #include "spheredata_1patch.hh"
 
@@ -105,6 +106,7 @@ class slices
                                           _slice[i].front().symmetry(),
                                           _slice[i].front().integrate_every(),
                                           _slice[i].front().interpolate_every(),
+                                          _slice[i].front().integration_type(),
                                           _slice[i].front().distrib_method(),
                                           _slice[i].front().processors()));
                   // remove last timelevel
@@ -121,8 +123,8 @@ class slices
             {
                DECLARE_CCTK_PARAMETERS
                // return, if no procs are needed (i.e. vol integral)
-               if(distrib_method == undefined)
-                return 0;
+               if(distrib_method == undefined_distrib)
+                return vector<int>();
 
                int nprocs = 1;
                MPI_Comm_size ( MPI_COMM_WORLD, &nprocs );

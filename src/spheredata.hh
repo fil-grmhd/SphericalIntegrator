@@ -57,14 +57,16 @@ extern int interpolator_order;
 static const CCTK_REAL PI = 4.0*atan(1.0);
 
 
-// distribution method: constant: all processors conatin all the data
-//                      split:    the sphere is split across multiple processors
-//                      single:   only one processor contains the sphere
-enum distrib_method_t { constant, split, single, undefined };
+// distribution method: constant:           all processors hold all the data
+//                      split:              the data is split across multiple processors
+//                      single:             only one processor holds all the data
+//                      undefined_distrib:  not defined
+enum distrib_method_t { constant, split, single, undefined_distrib };
 
-// integration type:    volume:  volume integral in sphere
-//                      surface: surface integral on sphere
-enum integration_t { volume, surface, undefined };
+// integration type:    volume:              volume integral in sphere
+//                      surface:             surface integral on sphere
+//                      undefined_integral:  not defined
+enum integration_t { volume, surface, undefined_integral };
 
 
 /// conversion to C++ vector
