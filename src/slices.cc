@@ -31,7 +31,8 @@ int slices<SD>::register_slice(const string& varname,
                                const int integrate_every,
                                const int interpolate_every,
                                const integration_t integration_type,
-                               const distrib_method_t distrib_method) {
+                               const distrib_method_t distrib_method,
+                               const int internal_gf_index) {
                DECLARE_CCTK_PARAMETERS
                // shortcut
                const int sn = slice_parameter_no;
@@ -65,6 +66,7 @@ int slices<SD>::register_slice(const string& varname,
                      interpolate_every,
                      integration_type,
                      distrib_method,
+                     internal_gf_index,
                      processors);
 
                _slice[cs].push_back(sd);

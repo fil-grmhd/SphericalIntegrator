@@ -30,10 +30,10 @@ using namespace SPI;
 
 
 
-extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeIntegral(const CCTK_POINTER_TO_CONST varname,
-                                                               const CCTK_POINTER_TO_CONST outname,
-                                                               const CCTK_INT sn,
-                                                               const CCTK_INT integrate_every)
+extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeVar(const CCTK_POINTER_TO_CONST varname,
+                                                          const CCTK_POINTER_TO_CONST outname,
+                                                          const CCTK_INT sn,
+                                                          const CCTK_INT integrate_every)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -49,13 +49,14 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeIntegral(const CCTK_POINTE
    unsigned num_vol_integrals = 0;
    for(int i = 0; i<slices_1patch.slice().size(); ++i) {
       if(slices_1patch(i,0).integration_type() == volume) {
-        num_vol_integrals += 1;
+        num_vol_integrals++;
       }
    }
    if(num_vol_integrals >= max_volume_integrals)
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Too much volume integrals registered, please increase max_volume_integrals parameter.");
 
    if(verbose > 1) {
+      CCTK_VInfo(CCTK_THORNSTRING,"Registering '%s' as volume variable on sphere %i",_varname,sn);
       if(integrate_every == 0)
         CCTK_VInfo(CCTK_THORNSTRING,"Never integrating '%s' in sphere %i.", _varname, sn);
    }
@@ -81,16 +82,16 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeIntegral(const CCTK_POINTE
    distrib_method_t d_method = undefined_distrib;
 
    // return the registered sliced variable number
-   return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, integrate_every, 0, i_type, d_method);
+   return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, integrate_every, 0, i_type, d_method, num_vol_integrals);
 }
 
 
-extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceIntegral(const CCTK_POINTER_TO_CONST varname,
-                                                                const CCTK_POINTER_TO_CONST outname,
-                                                                const CCTK_INT sn,
-                                                                const CCTK_INT integrate_every,
-                                                                const CCTK_INT interpolate_every,
-                                                                const CCTK_POINTER_TO_CONST distrib_method)
+extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceVar(const CCTK_POINTER_TO_CONST varname,
+                                                           const CCTK_POINTER_TO_CONST outname,
+                                                           const CCTK_INT sn,
+                                                           const CCTK_INT integrate_every,
+                                                           const CCTK_INT interpolate_every,
+                                                           const CCTK_POINTER_TO_CONST distrib_method)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -106,7 +107,11 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceIntegral(const CCTK_POINT
    assert(integrate_every >= 0);
    assert(interpolate_every >= 0);
 
-   if(verbose > 1) {
+   if(integrate_every < interpolate_every)
+      CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Interpolating less often than integrating for '%s' on sphere %i",_varname,sn);
+
+   if(verbose > 0) {
+      CCTK_VInfo(CCTK_THORNSTRING,"Registering '%s' as surface variable on sphere %i",_varname,sn);
       if(integrate_every == 0)
         CCTK_VInfo(CCTK_THORNSTRING,"Never integrating '%s' on sphere %i.", _varname, sn);
       if(interpolate_every == 0)
@@ -149,5 +154,5 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceIntegral(const CCTK_POINT
    integration_t i_type = surface;
 
    // return the registered sliced variable number
-   return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, integrate_every, interpolate_every, i_type, d_method);
+   return slices_1patch.register_slice(varname_lowercase, outname_lowercase, sn, integrate_every, interpolate_every, i_type, d_method, 0);
 }

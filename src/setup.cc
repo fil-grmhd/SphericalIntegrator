@@ -24,8 +24,6 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "setup.hh"
 
-
-
 namespace SPI {
 
 static
@@ -192,7 +190,8 @@ extern "C" void SphericalIntegrator_PostSetup(CCTK_ARGUMENTS)
       // We are now going to set up the radii as separately registered slice for each slice
       // Each processor should have the radius available. That means we gonna use a constant distribution.
       //ss_radius_id[i] = SphericalIntegrator_Register("ss_radius", i, 1, "const");
-      ss_radius_id[i] = radius_1patch.register_slice("ss_radius", "none", i, 1, 1, undefined_integral, constant);
+
+      ss_radius_id[i] = radius_1patch.register_slice("ss_radius", "none", i, 1, 1, undefined_integral, constant, 0);
 
       if (set_elliptic[i])
       {

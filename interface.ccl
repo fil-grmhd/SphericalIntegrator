@@ -5,7 +5,7 @@ USES INCLUDE: carpetinterp2.hh
 USES INCLUDE: utils.hh
 
 implements: SphericalIntegrator
-inherits: Grid
+inherits: Grid ADMBase
 
 INCLUDE HEADER: slices.hh in spherical_slices.hh
 INCLUDE HEADER: IO/io_hdf5.h in io_hdf5.h
@@ -37,7 +37,7 @@ CCTK_INT FUNCTION \
                                                 CCTK_INT IN interpolate_every, \
                                                 CCTK_POINTER_TO_CONST IN distrib_method)
 PROVIDES FUNCTION SphericalIntegrator_RegisterSurfaceIntegral \
-    WITH SphericalIntegrator_RegisterSurfaceIntegral \
+    WITH SphericalIntegrator_RegisterSurfaceVar \
     LANGUAGE C
 
 CCTK_INT FUNCTION \
@@ -46,7 +46,7 @@ CCTK_INT FUNCTION \
                                                CCTK_INT IN sn, \
                                                CCTK_INT IN integrate_every)
 PROVIDES FUNCTION SphericalIntegrator_RegisterVolumeIntegral \
-    WITH SphericalIntegrator_RegisterVolumeIntegral \
+    WITH SphericalIntegrator_RegisterVolumeVar \
     LANGUAGE C
 
 
@@ -57,12 +57,12 @@ PROVIDES FUNCTION SphericalIntegrator_RegisterVolumeIntegral \
 
 # Return Surface-Integral over registered variable. 
 CCTK_REAL FUNCTION \
-    SphericalIntegrator_IntegrateSurfaceVariable(CCTK_INT IN varno)
+    SphericalIntegrator_IntegrateSurfaceVariable(CCTK_POINTER_TO_CONST IN cctkGH_, CCTK_INT IN varno)
 PROVIDES FUNCTION SphericalIntegrator_IntegrateSurfaceVariable \
     WITH SphericalIntegrator_SurfaceIntegrate \
     LANGUAGE C
 
-# Return Volume-Integral over registered variable. 
+# Return Volume-Integral over registered variable.
 CCTK_REAL FUNCTION \
     SphericalIntegrator_IntegrateVolumeVariable(CCTK_POINTER_TO_CONST IN cctkGH_, CCTK_INT IN varno)
 PROVIDES FUNCTION SphericalIntegrator_IntegrateVolumeVariable \

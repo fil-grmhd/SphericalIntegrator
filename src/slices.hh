@@ -88,7 +88,8 @@ class slices
                                int const integrate_every,
                                int const interpolate_every,
                                const integration_t integration_type,
-                               const distrib_method_t distrib_method);
+                               const distrib_method_t distrib_method,
+                               const int internal_gf_index);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
             void cycle_timelevels(const int i)
@@ -108,6 +109,7 @@ class slices
                                           _slice[i].front().interpolate_every(),
                                           _slice[i].front().integration_type(),
                                           _slice[i].front().distrib_method(),
+                                          _slice[i].front().internal_gf_index(),
                                           _slice[i].front().processors()));
                   // remove last timelevel
                   _slice[i].pop_back();

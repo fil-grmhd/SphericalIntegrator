@@ -127,6 +127,7 @@ class spheredata
                        const int interpolate_every_,
                        const integration_t integration_type_,
                        const distrib_method_t distrib_method_,
+                       const int internal_gf_index_,
                        const vector<int>& processors_)
                : _varname(varname_), _outname(outname_), _id(id_), _name(varname_),
                  _ntheta(ntheta_+2*nghosts_), _nphi(nphi_+2*nghosts_), _nghosts(nghosts_),
@@ -137,6 +138,7 @@ class spheredata
                  _interpolate_every(interpolate_every_),
                  _integration_type(integration_type_),
                  _distrib_method(distrib_method_),
+                 _internal_gf_index(internal_gf_index_),
                  _processors(processors_)
             {
                stringstream str;
@@ -295,11 +297,29 @@ class spheredata
             /// returns the original name of the Cactus scalar that gets the integration result
             string outname() const { return _outname; }
 
+            /// returns pointer to output variable, defined by outname()
+            CCTK_REAL* outpointer(const cGH* const cctkGH) const {
+              // try to get output scalar index, check if it is actually there
+              CCTK_INT output_index = CCTK_VarIndex(this->outname().c_str());
+              if(output_index < 0)
+                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+                           "Couldn't get index of output variable '%s' for '%s' on sphere %i",
+                           this->outname().c_str(),
+                           this->varname().c_str(),
+                           this->ID());
+              // get the pointer to the output scalar
+              return (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,output_index,NULL);
+
+            }
+
             /// returns integration iteration number
             int integrate_every() const { return _integrate_every; }
 
             /// returns interpolation iteration number
             int interpolate_every() const { return _interpolate_every; }
+
+            /// returns internal gf index, for volume integrals
+            int internal_gf_index() const { return _internal_gf_index; }
 
             /// returns the ID of the slice == n-th spherical slice in parfile
             int ID() const { return _id; }
@@ -426,6 +446,9 @@ class spheredata
 
             /// how often should the GF be interpolated?
             int _interpolate_every;
+
+            /// index of the internal gf, used for volume integration
+            int _internal_gf_index;
 
             /// a constant radius
             CCTK_REAL _radius;
