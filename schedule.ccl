@@ -30,21 +30,33 @@ SCHEDULE SphericalIntegrator_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_Post
   OPTIONS: GLOBAL
 } "Post setup."
 
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT INITIAL AFTER SphericalIntegrator_PostSetup
+########################################################################
+## Call integration register routines from other thorns in this group ##
+######################################################################## 
+SCHEDULE GROUP SphericalIntegrator_Register AT INTIAL AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
+{
+} "Group for register in other thorns."
+
+SCHEDULE GROUP SphericalIntegrator_Register AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
+{
+} "Group for register in other thorns."
+
+
+# Update of spheres, e.g. moving origin, update radius etc
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT INITIAL AFTER SphericalIntegrator_PostSetup
+{
+} "Set the spherical slices before this group and use them afterwards"
+
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE MoL_PostStep
 {
 } "Set the spherical slices before this group and use them afterwards"
 
 
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE MoL_PostStep
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POSTSTEP
 {
 } "Set the spherical slices before this group and use them afterwards"
 
-
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POSTSTEP
-{
-} "Set the spherical slices before this group and use them afterwards"
-
-SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_HasBeenSet
+SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_UpdateSpheres
 {
   LANG: C
   OPTIONS: GLOBAL
@@ -54,7 +66,7 @@ SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_HasBeenSet
 ## The actual interpolation/integration schedule ##
 ###################################################
 
-SCHEDULE GROUP SphericalIntegrator_Calculations AT POSTSTEP AFTER SphericalIntegrator_HasBeenSet
+SCHEDULE GROUP SphericalIntegrator_Calculations AT POSTSTEP AFTER SphericalIntegrator_UpdateSpheres
 {
   STORAGE: ss_vol_integration_gfs
 } "Interpolation and integration schedule group."
