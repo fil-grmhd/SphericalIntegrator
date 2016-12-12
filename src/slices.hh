@@ -49,23 +49,6 @@ extern vector<int> nphi_internal;
 /// a vector that stores for each slice-no the pointer to the radius storage.
 extern vector<void*> radius_pointers;
 
-/// Create Cactus array out/input var string
-std::string createArrayVarString(std::string base, unsigned long index) {
-  std::stringstream ss(base);
-  ss << "[" << index << "]";
-  return ss.str();
-}
-/// Create Cactus array out/input var string sequence
-vector<std::string> createArrayVarStrings(std::string base, unsigned long index, unsigned len) {
-  vector<string> str_vec;
-  for(int i = 0; i<len; ++i) {
-    std::stringstream ss(base);
-    ss << "[" << index + i << "]";
-    str_vec.push_back(ss.str());
-  }
-  return str_vec;
-}
-
 /**
    This carries all data of all slices of a given type
    and assignes groups of processors that can be used for

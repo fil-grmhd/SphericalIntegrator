@@ -332,7 +332,8 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
       CCTK_REAL distance = std::sqrt(x_dist*x_dist + y_dist*y_dist + z_dist*z_dist);
 
       // set to zero outside of the sphere
-      if(distance <= slices_1patch(vol_vars[i],0).radius())
+      if((distance <= slices_1patch(vol_vars[i],0).radius())
+          || (slices_1patch(vol_vars[i],0).radius() == 0))
         vol_vars_tmp_pointers[i][ijk] = det_g*vol_vars_pointers[i][ijk];
       else
         vol_vars_tmp_pointers[i][ijk] = 0.0;

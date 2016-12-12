@@ -5,6 +5,7 @@ STORAGE: ss_active
 STORAGE: ss_valid
 STORAGE: ss_info
 STORAGE: ss_radius_id
+STORAGE: ss_shape_descriptors
 
 SCHEDULE SphericalIntegrator_ParamCheck AT CCTK_PARAMCHECK
 {
@@ -33,7 +34,7 @@ SCHEDULE SphericalIntegrator_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_Post
 ########################################################################
 ## Call integration register routines from other thorns in this group ##
 ######################################################################## 
-SCHEDULE GROUP SphericalIntegrator_Register AT INTIAL AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
+SCHEDULE GROUP SphericalIntegrator_Register AT INITIAL AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
 {
 } "Group for register in other thorns."
 
@@ -43,11 +44,11 @@ SCHEDULE GROUP SphericalIntegrator_Register AT POST_RECOVER_VARIABLES AFTER Sphe
 
 
 # Update of spheres, e.g. moving origin, update radius etc
-SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT INITIAL AFTER SphericalIntegrator_PostSetup
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT INITIAL AFTER SphericalIntegrator_Register
 {
 } "Set the spherical slices before this group and use them afterwards"
 
-SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE MoL_PostStep
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_Register BEFORE MoL_PostStep
 {
 } "Set the spherical slices before this group and use them afterwards"
 
