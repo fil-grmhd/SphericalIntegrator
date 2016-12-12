@@ -248,7 +248,7 @@ extern "C" void SphericalIntegrator_CollectiveInterpolation(CCTK_ARGUMENTS) {
   vector<CCTK_INT> vars[nslices];
 
   if(verbose > 0)
-    CCTK_INFO("Interpolating surface variables to spheres.");
+    CCTK_VInfo(CCTK_THORNSTRING,"Interpolating surface variables to spheres (it=%i).",cctk_iteration);
 
   // collect all vars and sort them to their sphere ID
   for(int i = 0; i<slices_1patch.slice().size(); ++i) {
@@ -273,7 +273,7 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS
 
   if(verbose > 0)
-    CCTK_INFO("Syncing volume variables to internal GFs and mask by spheres.");
+    CCTK_VInfo(CCTK_THORNSTRING,"Syncing volume variables to internal GFs and mask by spheres (it=%i).",cctk_iteration);
 
   // vector of volume integrated vars
   vector<CCTK_INT> vol_vars;

@@ -39,8 +39,8 @@ extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
 
-   if(verbose>0)
-     CCTK_INFO("Checking and updating slices.");
+   if(verbose>1)
+     CCTK_VInfo(CCTK_THORNSTRING,"Checking and updating slices (it=%i).",cctk_iteration);
 
    for (int n=0; n < nslices; ++n)
    {

@@ -6,6 +6,7 @@ STORAGE: ss_valid
 STORAGE: ss_info
 STORAGE: ss_radius_id
 STORAGE: ss_shape_descriptors
+STORAGE: ss_vol_integration_gfs
 
 SCHEDULE SphericalIntegrator_ParamCheck AT CCTK_PARAMCHECK
 {
@@ -69,7 +70,6 @@ SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_UpdateSpheres
 
 SCHEDULE GROUP SphericalIntegrator_Calculations AT POSTSTEP AFTER SphericalIntegrator_UpdateSpheres
 {
-  STORAGE: ss_vol_integration_gfs
 } "Interpolation and integration schedule group."
 
 SCHEDULE GROUP SphericalIntegrator_UpdateGFs IN SphericalIntegrator_Calculations
