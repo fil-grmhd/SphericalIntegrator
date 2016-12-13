@@ -56,10 +56,11 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterVolumeVar(const CCTK_POINTER_TO_
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Too much volume integrals registered, please increase max_volume_integrals parameter to at least %i.",num_vol_integrals+1);
 
    if(verbose > 1) {
-      CCTK_VInfo(CCTK_THORNSTRING,
-                 "Registering '%s' as volume variable on sphere %i",_varname,sn);
+      CCTK_VInfo(CCTK_THORNSTRING,"Registered volume integral on sphere %i:",sn);
+      CCTK_VInfo(CCTK_THORNSTRING,"GF: %s | Scalar: %s",_varname,_outname);
+
       if(integrate_every == 0)
-        CCTK_VInfo(CCTK_THORNSTRING,"Never integrating '%s' in sphere %i.", _varname, sn);
+        CCTK_VInfo(CCTK_THORNSTRING,"Never integrating this quantity!");
    }
 
    // convert varname to lowercase
@@ -111,16 +112,19 @@ extern "C" CCTK_INT SphericalIntegrator_RegisterSurfaceVar(const CCTK_POINTER_TO
    if(integrate_every < interpolate_every)
       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Interpolating less often than integrating for '%s' on sphere %i",_varname,sn);
 
-   if(verbose > 0) {
-      CCTK_VInfo(CCTK_THORNSTRING,"Registering '%s' as surface variable on sphere %i",_varname,sn);
+   if(verbose > 1) {
+
+      CCTK_VInfo(CCTK_THORNSTRING,"Registered surface integral on sphere %i:",sn);
+      CCTK_VInfo(CCTK_THORNSTRING,"GF: %s | Scalar: %s",_varname,_outname);
+
       if(integrate_every == 0)
-        CCTK_VInfo(CCTK_THORNSTRING,"Never integrating '%s' on sphere %i.", _varname, sn);
+        CCTK_VInfo(CCTK_THORNSTRING,"Never integrating this quantity!");
       if(interpolate_every == 0)
-        CCTK_VInfo(CCTK_THORNSTRING,"Never interpolating '%s' on sphere %i.", _varname, sn);
+        CCTK_VInfo(CCTK_THORNSTRING,"Never interpolating this quantity!");
       if((interpolate_every > 0) &&
          (integrate_every > 0) &&
          (interpolate_every != integrate_every))
-        CCTK_VInfo(CCTK_THORNSTRING,"CAREFUL: '%s' on sphere %i is interpolated and integrated at different iterations.", _varname, sn);
+        CCTK_VInfo(CCTK_THORNSTRING,"CAREFUL: This quantity is interpolated and integrated at different iterations.");
    }
 
 

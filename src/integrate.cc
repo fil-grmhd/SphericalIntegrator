@@ -104,7 +104,7 @@ extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
     // integrate only if it is necessary
     if(cctk_iteration % slices_1patch(i,0).integrate_every() == 0) {
       // integrate and store result
-      if(verbose > 0) {
+      if(verbose > 1) {
         CCTK_VInfo(CCTK_THORNSTRING,"Integrating '%s' in collective mode on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
       }
 
@@ -113,6 +113,10 @@ extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
       else {
         slices_1patch(i,0).integrate_volume(cctkGH,sum_reduction_handle);
       }
+    }
+    else {
+      if(verbose > 1)
+        CCTK_VInfo(CCTK_THORNSTRING,"Skipping integration of '%s' on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
     }
   }
 

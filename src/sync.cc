@@ -250,12 +250,22 @@ extern "C" void SphericalIntegrator_CollectiveInterpolation(CCTK_ARGUMENTS) {
   if(verbose > 0)
     CCTK_VInfo(CCTK_THORNSTRING,"Interpolating surface variables to spheres (it=%i).",cctk_iteration);
 
+  bool empty = true;
   // collect all vars and sort them to their sphere ID
   for(int i = 0; i<slices_1patch.slice().size(); ++i) {
     // only interpolate if it is wanted
     if((slices_1patch(i,0).interpolate_every() != 0)
-      && (cctk_iteration % slices_1patch(i,0).interpolate_every() == 0))
-        vars[slices_1patch(i,0).ID()].push_back(i);
+      && (cctk_iteration % slices_1patch(i,0).interpolate_every() == 0)) {
+      vars[slices_1patch(i,0).ID()].push_back(i);
+      empty = false;
+    }
+  }
+
+  // stop, if nothing is interpolated this iteration
+  if(empty) {
+    if(verbose > 0)
+      CCTK_VInfo(CCTK_THORNSTRING,"Nothing to interpolate in this iteration (it=%i).",cctk_iteration);
+    return;
   }
 
   // sync collectively vars on each sphere
@@ -289,9 +299,12 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
         CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Volume integrals over elliptical surfaces not supported yet. (sn = %i)",slices_1patch(i,0).ID());
     }
   }
-  // drop if nothing is integrated this iteration
-  if(vol_vars.size() == 0)
+  // stop, if nothing is integrated this iteration
+  if(vol_vars.size() == 0) {
+    if(verbose > 0)
+      CCTK_VInfo(CCTK_THORNSTRING,"Nothing to sync in this iteration (it=%i).",cctk_iteration);
     return;
+  }
 
   // check if enough tmp GFs are available
   if(vol_vars.size() > max_volume_integrals)
@@ -323,7 +336,12 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
   #pragma omp parallel for schedule(static)
   for(int ijk = 0; ijk < cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]; ++ijk) {
     // compute det(metric) for volume element
-    CCTK_REAL det_g = utils::metric::spatial_det(gxx[ijk],gxy[ijk],gxz[ijk],gyy[ijk],gyz[ijk],gzz[ijk]);
+    CCTK_REAL dV = std::sqrt(utils::metric::spatial_det(gxx[ijk],
+                                                        gxy[ijk],
+                                                        gxz[ijk],
+                                                        gyy[ijk],
+                                                        gyz[ijk],
+                                                        gzz[ijk]));
     for(int i = 0; i<vol_vars.size(); ++i) {
       // calculate (coordinate) distance from sphere origin
       CCTK_REAL x_dist = x[ijk]-slices_1patch(vol_vars[i],0).origin()[0];
@@ -334,7 +352,7 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
       // set to zero outside of the sphere
       if((distance <= slices_1patch(vol_vars[i],0).radius())
           || (slices_1patch(vol_vars[i],0).radius() == 0))
-        vol_vars_tmp_pointers[i][ijk] = det_g*vol_vars_pointers[i][ijk];
+        vol_vars_tmp_pointers[i][ijk] = dV*vol_vars_pointers[i][ijk];
       else
         vol_vars_tmp_pointers[i][ijk] = 0.0;
     }
