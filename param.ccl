@@ -36,6 +36,22 @@ INT interpolator_order "Interpolation order" STEERABLE=recover
   0:11 :: "CarpetInterp2 can do 0 up to 11"
 } 4
 
+BOOLEAN bnstracker_positions "Get positions from BNSTrackerGen" STEERABLE=always
+{
+} no
+
+BOOLEAN track_star1[42] "Moves with first star" STEERABLE=always
+{
+} no
+BOOLEAN track_star2[42] "Moves with second star" STEERABLE=always
+{
+} no
+BOOLEAN track_star1_md[42] "Moves with first star (max density)" STEERABLE=always
+{
+} no
+BOOLEAN track_star2_md[42] "Moves with second star (max density)" STEERABLE=always
+{
+} no
 
 BOOLEAN precalc_sYlms "Whether to precalculate sYlm's and store them. Note that although speed-up might be significant if you have many variables to decompose, there will be storage necessary for lmax^2 additional arrays for each slice on each processor!" \
   STEERABLE=recover
@@ -97,12 +113,6 @@ CCTK_INT max_volume_integrals "Maximum number of volume integrals (in total)" ST
 {
   1:* :: "number of GFs"   
 } 20
-
-
-BOOLEAN enforce_single_registration "If set to yes, this will allocate memory only once per slice and variable. It has the disadvantage that if some other thorn triggers a synchronization for the same slice and variable your results may get spoiled."
-{
-} no
-
 
 BOOLEAN use_carpet_interp1 "use carpet interp1 if you need proper accounting of symmetries and/or time interpolation"
 {

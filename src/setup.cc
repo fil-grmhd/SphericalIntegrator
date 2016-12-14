@@ -163,6 +163,18 @@ extern "C" void SphericalIntegrator_Setup(CCTK_ARGUMENTS)
          ss_max_y[i] = origin_y[i] + radius_y[i];
          ss_max_z[i] = origin_z[i] + radius_z[i];
       }
+      // init as disabled
+      ss_track[i] = -1;
+      if(bnstracker_positions) {
+        if(track_star1[i])
+          ss_track[i] = 1;
+        if(track_star2[i])
+          ss_track[i] = 2;
+        if(track_star1_md[i])
+          ss_track[i] = 3;
+        if(track_star2_md[i])
+          ss_track[i] = 4;
+      }
    }
 }
 

@@ -52,6 +52,75 @@ extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
                      "which calculated this surface", n);
       }
    }
+   // update origins of spheres if bnstracker is used
+   if(bnstracker_positions) {
+      // try to get bnstracker var indices, check if they are there
+      CCTK_INT star1_index_x = CCTK_VarIndex("BNSTrackerGen::bns_x_1");
+      CCTK_INT star1_index_y = CCTK_VarIndex("BNSTrackerGen::bns_y_1");
+
+      CCTK_INT star2_index_x = CCTK_VarIndex("BNSTrackerGen::bns_x_2");
+      CCTK_INT star2_index_y = CCTK_VarIndex("BNSTrackerGen::bns_y_2");
+
+      CCTK_INT star1_index_x_md = CCTK_VarIndex("BNSTrackerGen::bns_x_md_1");
+      CCTK_INT star1_index_y_md = CCTK_VarIndex("BNSTrackerGen::bns_y_md_1");
+
+      CCTK_INT star2_index_x_md = CCTK_VarIndex("BNSTrackerGen::bns_x_md_2");
+      CCTK_INT star2_index_y_md = CCTK_VarIndex("BNSTrackerGen::bns_y_md_2");
+
+      // checking one index should be enough
+      if(star1_index_x < 0)
+        CCTK_WARN(0,"Can't access BNSTrackerGen variables: Is it activated?");
+
+      // get the pointer to the bnstracker vars
+      CCTK_REAL* star1_ptr_x = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star1_index_x,NULL);
+      CCTK_REAL* star1_ptr_y = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star1_index_y,NULL);
+
+      CCTK_REAL* star2_ptr_x = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star2_index_x,NULL);
+      CCTK_REAL* star2_ptr_y = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star2_index_y,NULL);
+
+      CCTK_REAL* star1_ptr_x_md = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star1_index_x_md,NULL);
+      CCTK_REAL* star1_ptr_y_md = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star1_index_y_md,NULL);
+
+      CCTK_REAL* star2_ptr_x_md = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star2_index_x_md,NULL);
+      CCTK_REAL* star2_ptr_y_md = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,star2_index_y_md,NULL);
+
+      for(int i = 0; i<nslices; ++i) {
+         switch(ss_track[i]) {
+            case 0: {
+              // do nothing, no updated wanted
+              break;
+            }
+            case 1: {
+              // track star 1
+              ss_origin_x[i] = *star1_ptr_x;
+              ss_origin_y[i] = *star1_ptr_y;
+              ss_origin_z[i] = 0;
+              break;
+            }
+            case 2: {
+              // track star 2
+              ss_origin_x[i] = *star2_ptr_x;
+              ss_origin_y[i] = *star2_ptr_y;
+              ss_origin_z[i] = 0;
+              break;
+            }
+            case 3: {
+              // track star 1 md
+              ss_origin_x[i] = *star1_ptr_x_md;
+              ss_origin_y[i] = *star1_ptr_y_md;
+              ss_origin_z[i] = 0;
+              break;
+            }
+            case 4: {
+              // track star 2 md
+              ss_origin_x[i] = *star2_ptr_x_md;
+              ss_origin_y[i] = *star2_ptr_y_md;
+              ss_origin_z[i] = 0;
+              break;
+            }
+         }
+      }
+   }
    // go through all 1-patch slices and check and change most recent timelevel
    for (int j=0; j < slices_1patch.slice().size(); ++j)
    {

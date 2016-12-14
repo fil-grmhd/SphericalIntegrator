@@ -27,11 +27,20 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 extern "C" void SphericalIntegrator_ParamCheck(CCTK_ARGUMENTS)
 {
-   DECLARE_CCTK_ARGUMENTS
-   DECLARE_CCTK_PARAMETERS
+  DECLARE_CCTK_ARGUMENTS
+  DECLARE_CCTK_PARAMETERS
 
-   if (enforce_single_registration)
-   {
-      CCTK_WARN(1, "Using \"enforce_single_registration=yes\"  may spoil your code! Use this only if you know what you are doing!");
-   }
+  for(int i = 0; i<nslices; ++i) {
+    if(!bnstracker_positions) {
+      // check wrong activation of tracking
+      if((track_star1[i]) || (track_star2[i]) ||
+         (track_star1_md[i]) || (track_star2_md[i]))
+        CCTK_WARN(0,"Please activate bnstracker_positions to be able to track the stars.");
+    }
+    else {
+      if(((track_star1[i] ? 1:0) + (track_star2[i] ? 1:0)
+         +(track_star1_md[i] ? 1:0) + (track_star2_md[i] ? 1:0)) > 1)
+         CCTK_WARN(0,"Can't track two different positions with the same sphere!");
+    }
+  }
 }
