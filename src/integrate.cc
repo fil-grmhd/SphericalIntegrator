@@ -105,7 +105,7 @@ extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
     if(cctk_iteration % slices_1patch(i,0).integrate_every() == 0) {
       // integrate and store result
       if(verbose > 1) {
-        CCTK_VInfo(CCTK_THORNSTRING,"Integrating '%s' in collective mode on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
+        CCTK_VInfo(CCTK_THORNSTRING,"Collective Integration: '%s' on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
       }
 
       if(slices_1patch(i,0).integration_type() == surface)
