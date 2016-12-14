@@ -24,7 +24,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "slices.hh"
 
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;

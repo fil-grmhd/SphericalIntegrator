@@ -1,4 +1,5 @@
 
+
 /* Copyright 2013 Peter Diener, Nils Dorband, Roland Haas, Ian Hinder,
 Christian Ott, Denis Pollney, Thomas Radke, Christian Reisswig, Erik
 Schnetter, Barry Wardell and Burkhard Zink
@@ -25,23 +26,13 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <vector>
 #include "mpi.h"
 #include "spheredata_1patch.hh"
-#include "spheredata_2patch.hh"
-#include "spheredata_6patch.hh"
 
 
-
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;
 
-
-/// a flag that states whether multipatch is activated or not.
-extern bool Llama_activated;
-
-
-/// a flag for each of the slices defining whether it can take advantage of Llama
-extern vector<bool> can_use_Llama_internal;
 
 /// a new radius for the slices that don't exactly lie on Llama radial-gridpoints
 /// but not insist of sticking to the given radius so that we can shift the sphere radius
@@ -66,7 +57,7 @@ template <class SD>
 class slices
 {
    public :
-            slices() : _slice(0), proc_load(0) 
+            slices() : _slice(0), proc_load(0)
             { }
 /*
             slices(const vector<SD>& slice_) : _slice(slice_), proc_load(0)
@@ -91,7 +82,13 @@ class slices
 
             /// create storage for a new slice with some timelevels as decribed by the n-th parameter in the parfile
             /// and return the slice-id
-            int register_slice(const string& varname, int const slice_parameter_no, int const timelevels, const distrib_method_t distrib_method);
+            int register_slice(const string& varname,
+                               const string& result,
+                               int const slice_parameter_no,
+                               int const timelevels,
+                               int const integrate_every,
+                               int const interpolate_every,
+                               const distrib_method_t distrib_method);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
             void cycle_timelevels(const int i)
@@ -100,16 +97,17 @@ class slices
                if (_slice[i].size() > 1)
                {
                   // create new slice by using parameters of the most recent timelevel
-                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().ID(),
+                  _slice[i].push_front(SD(_slice[i].front().varname(), _slice[i].front().outname(), _slice[i].front().ID(),
                                           _slice[i].front().npoints()[0], _slice[i].front().npoints()[1], _slice[i].front().nghosts(),
                                           _slice[i].front().radius(0, 0, 0),
                                           _slice[i].front().radius_pointer(),
                                           _slice[i].front().origin(),
                                           _slice[i].front().has_constant_radius(),
                                           _slice[i].front().symmetry(),
+                                          _slice[i].front().integrate_every(),
+                                          _slice[i].front().interpolate_every(),
                                           _slice[i].front().distrib_method(),
-                                          _slice[i].front().processors(),
-                                          _slice[i].front().can_use_Llama()));
+                                          _slice[i].front().processors()));
                   // remove last timelevel
                   _slice[i].pop_back();
                }
@@ -167,64 +165,25 @@ class slices
 
 
 
-/// 1-patch slice identity numbers are between 0-10000
-#define ONEPATCH_SLICE_IDS 0
-/// 2-patch slice identity numbers are between 10000-20000
-#define TWOPATCH_SLICE_IDS 10000
-/// 6-patch slice identity numbers are above 20000
-#define SIXPATCH_SLICE_IDS 20000
-
-/// all slices for 1patch, 2patch and 6patch systems. 
+/// all slices for 1patch systems.
 extern slices<spheredata_1patch<CCTK_REAL> > slices_1patch;
-extern slices<spheredata_2patch<CCTK_REAL> > slices_2patch;
-extern slices<spheredata_6patch<CCTK_REAL> > slices_6patch;
 
 extern slices<spheredata_1patch<CCTK_REAL> > radius_1patch;
-extern slices<spheredata_2patch<CCTK_REAL> > radius_2patch;
-extern slices<spheredata_6patch<CCTK_REAL> > radius_6patch;
 
 /// some shortcuts
 typedef spheredata_1patch<CCTK_REAL>::integrator integrator_1patch;
 typedef spheredata_1patch<CCTK_REAL>::const_iter const_iter_1patch;
 typedef spheredata_1patch<CCTK_REAL>::iter       iter_1patch;
 
-typedef spheredata_6patch<CCTK_REAL>::integrator integrator_6patch;
-typedef spheredata_6patch<CCTK_REAL>::const_iter const_iter_6patch;
-typedef spheredata_6patch<CCTK_REAL>::iter       iter_6patch;
-
-
-
-#define INDEX1P(x) x-ONEPATCH_SLICE_IDS
-#define INDEX2P(x) x-TWOPATCH_SLICE_IDS
-#define INDEX6P(x) x-SIXPATCH_SLICE_IDS
-
+#define INDEX1P(x) x
 
 /// given a variable-number we check if this is a 1-patch slice
 inline bool is_1patch(CCTK_INT varno)
 {
-   if (varno >= ONEPATCH_SLICE_IDS && varno < TWOPATCH_SLICE_IDS)
+   if (varno >= 0 && varno < 10000)
       return true;
    return false;
 }
-
-
-/// given a variable-number we check if this is a 1-patch slice
-inline bool is_2patch(CCTK_INT varno)
-{
-   if (varno >= TWOPATCH_SLICE_IDS && varno < SIXPATCH_SLICE_IDS)
-      return true;
-   return false;
-}
-
-
-/// given a variable-number we check if this is a 1-patch slice
-inline bool is_6patch(CCTK_INT varno)
-{
-   if (varno >= SIXPATCH_SLICE_IDS)
-      return true;
-   return false;
-}
-
 
 
 }

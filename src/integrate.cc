@@ -26,34 +26,50 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "slices.hh"
 
 
-using namespace SPS;
+using namespace SPI;
 
 
 
-extern "C" CCTK_REAL SphericalSlice_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
+extern "C" CCTK_REAL SphericalIntegrator_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
 {
    DECLARE_CCTK_PARAMETERS
-   
+
    assert(timelevel >= 0);
    assert(varno >= 0);
-   
+
    CCTK_REAL result = 0;
-   
-   if (is_1patch(varno))
-   {
-      assert(INDEX1P(varno) < slices_1patch.slice().size());
-      result = slices_1patch(INDEX1P(varno), timelevel).integrate();
-   }
-   
-   if (is_2patch(varno))
-      CCTK_WARN(0, "Uh oh....the idea is good but the world isn't ready yet...");
-   
-   if (is_6patch(varno))
-   {
-      assert(INDEX6P(varno) < slices_6patch.slice().size());
-      result = slices_6patch(INDEX6P(varno), timelevel).integrate();
-   }
-   
+
+   assert(varno < slices_1patch.slice().size());
    // return the surface integral
-   return result;
+   return slices_1patch(varno, timelevel).integrate();
+}
+
+extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS
+  DECLARE_CCTK_PARAMETERS
+
+  vector<CCTK_INT> vars[nslices];
+
+  // collect all vars and sort them to their sphere ID
+  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
+    // only integrate if it is wanted
+    if((slices_1patch(i,0).integrate_every() != 0)
+      && (cctk_iteration % slices_1patch(i,0).integrate_every() == 0))
+        vars[slices_1patch(i,0).ID()].push_back(i);
+  }
+
+  // start to integrate each var (on timelvl 0)
+  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
+    if(cctk_iteration % slices_1patch(i,0).integrate_every() == 0) {
+      // try to get output scalar index, check if it is actually there
+      CCTK_INT output_index = CCTK_VarIndex(slices_1patch(i,0).outname().c_str());
+      if(output_index < 0)
+        CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+                   "couldn't get index of output variable '%s'", slices_1patch(i, 0).outname().c_str());
+      // get the pointer to the output scalar
+      CCTK_REAL* result = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,output_index,NULL);
+      // integrate and store result
+      *result = slices_1patch(i, 0).integrate();
+    }
+  }
 }

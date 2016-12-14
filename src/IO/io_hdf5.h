@@ -18,15 +18,15 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef _IO_HDF5_SPS_
-#define _IO_HDF5_SPS_
+#ifndef _IO_HDF5_SPI_
+#define _IO_HDF5_SPI_
 
 
 #include "io.h"
 #include "H5Cpp.h"
 
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace H5;

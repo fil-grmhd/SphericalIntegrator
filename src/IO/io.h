@@ -25,7 +25,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "attributes.h"
 
 
-namespace SPS {
+namespace SPI {
 
 
 enum io_mode_t { overwrite, append, read_only };

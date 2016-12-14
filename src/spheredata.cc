@@ -20,9 +20,10 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "spheredata.hh"
 
-namespace SPS {
-  
+namespace SPI {
+
   // Instantiate template
   template class spheredata<CCTK_REAL>;
-  
-} // namespace SPS
+
+} // namespace SPI
+

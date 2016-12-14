@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <cassert>
 
 
-namespace SPS {
+namespace SPI {
 
 /*
    Calculates the real and imaginary spin-weighted spherical harmonics 

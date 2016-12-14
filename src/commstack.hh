@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <vector>
 #include <cassert>
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;
@@ -34,10 +34,10 @@ using namespace std;
 
 
 /**
-   This class represents a stack of collective 
+   This class represents a stack of collective
    MPI_Allreduce commands. Since MPI_Allreduce is
    expensive, we collect all reductions and do it in one
-   single call. 
+   single call.
 */
 class commstack
 {
@@ -47,28 +47,28 @@ class commstack
                  _op(op), _comm(comm),
                  was_reduced(false)
             { }
-            
+
             virtual ~commstack() { }
-            
+
             /// puts a value to the collective reduction buffer
             void push(CCTK_REAL val);
-            
+
             /// MPI_Allreduce of the collective buffer
             void reduce();
-            
+
             /// read value from collective buffer. This is checked for reduction.
             CCTK_REAL reduced_val(const int i) const { assert(was_reduced); return collective_buffer[i]; }
-            
+
             /// read value from collective buffer. This may or may not be reduced!
             CCTK_REAL buffer_val(const int i) const { return collective_buffer[i]; }
-            
+
    private :
-            
+
             vector<CCTK_REAL> collective_buffer;
-            
+
             MPI_Op   _op;
             MPI_Comm _comm;
-            
+
             bool was_reduced;
 };
 

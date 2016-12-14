@@ -26,7 +26,7 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include <queue>
 
 
-namespace SPS {
+namespace SPI {
 
 
 using namespace std;
