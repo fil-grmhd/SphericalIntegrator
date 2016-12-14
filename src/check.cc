@@ -39,6 +39,9 @@ extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
    DECLARE_CCTK_ARGUMENTS
    DECLARE_CCTK_PARAMETERS
 
+   if(verbose>1)
+     CCTK_VInfo(CCTK_THORNSTRING,"Checking and updating slices (it=%i).",cctk_iteration);
+
    for (int n=0; n < nslices; ++n)
    {
       if (ss_valid[n] > 0 && ss_active[n] == 0)
@@ -61,6 +64,5 @@ extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
    // TODO: also set other ss_info variables!
    //       But on the other hand calculating the surface area at each timestep might be expensive....
 }
-
 
 }

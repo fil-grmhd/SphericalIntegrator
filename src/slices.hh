@@ -24,9 +24,11 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include <cctk.h>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <utils.hh>
 #include "mpi.h"
 #include "spheredata_1patch.hh"
-
 
 namespace SPI {
 
@@ -46,7 +48,6 @@ extern vector<int> nphi_internal;
 
 /// a vector that stores for each slice-no the pointer to the radius storage.
 extern vector<void*> radius_pointers;
-
 
 /**
    This carries all data of all slices of a given type
@@ -85,10 +86,11 @@ class slices
             int register_slice(const string& varname,
                                const string& result,
                                int const slice_parameter_no,
-                               int const timelevels,
                                int const integrate_every,
                                int const interpolate_every,
-                               const distrib_method_t distrib_method);
+                               const integration_t integration_type,
+                               const distrib_method_t distrib_method,
+                               const int internal_gf_index);
 
             /// shifts all timelevels of i-th slice backwards, deletes the last one and creates storage for the first one
             void cycle_timelevels(const int i)
@@ -106,7 +108,9 @@ class slices
                                           _slice[i].front().symmetry(),
                                           _slice[i].front().integrate_every(),
                                           _slice[i].front().interpolate_every(),
+                                          _slice[i].front().integration_type(),
                                           _slice[i].front().distrib_method(),
+                                          _slice[i].front().internal_gf_index(),
                                           _slice[i].front().processors()));
                   // remove last timelevel
                   _slice[i].pop_back();
@@ -121,6 +125,10 @@ class slices
             vector<int> get_processors(const int sn, const distrib_method_t distrib_method)
             {
                DECLARE_CCTK_PARAMETERS
+               // return, if no procs are needed (i.e. vol integral)
+               if(distrib_method == undefined_distrib)
+                return vector<int>();
+
                int nprocs = 1;
                MPI_Comm_size ( MPI_COMM_WORLD, &nprocs );
 

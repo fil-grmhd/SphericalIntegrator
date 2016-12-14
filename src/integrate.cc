@@ -30,46 +30,96 @@ using namespace SPI;
 
 
 
-extern "C" CCTK_REAL SphericalIntegrator_Integrate(const CCTK_INT varno, const CCTK_INT timelevel)
+extern "C" CCTK_REAL SphericalIntegrator_SurfaceIntegrate(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
 {
    DECLARE_CCTK_PARAMETERS
 
-   assert(timelevel >= 0);
    assert(varno >= 0);
 
-   CCTK_REAL result = 0;
+   assert(varno < slices_1patch.slice().size());
+
+   cGH const * restrict const cctkGH = (cGH*) cctkGH_;
+
+   if(verbose > 0) {
+     CCTK_VInfo(CCTK_THORNSTRING,"Taking manual surface integral of '%s' on sphere %i.",slices_1patch(varno,0).varname().c_str(),slices_1patch(varno,0).ID());
+   }
+
+   // return the surface integral
+   return slices_1patch(varno, 0).integrate_surface(cctkGH);
+}
+
+extern "C" CCTK_REAL SphericalIntegrator_VolumeIntegrate(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
+{
+   DECLARE_CCTK_PARAMETERS
+
+   assert(varno >= 0);
+
+   cGH const * restrict const cctkGH = (cGH*) cctkGH_;
+
+   if(verbose > 0) {
+     CCTK_VInfo(CCTK_THORNSTRING,"Taking manual volume integral of '%s' over sphere %i.",slices_1patch(varno,0).varname().c_str(),slices_1patch(varno,0).ID());
+   }
+
+   const CCTK_INT sum_reduction_handle = CCTK_ReductionHandle("sum");
+   if(sum_reduction_handle < 0)
+       CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"SphericalIntegrator: Unable to get reduction handel 'sum'.");
 
    assert(varno < slices_1patch.slice().size());
+
    // return the surface integral
-   return slices_1patch(varno, timelevel).integrate();
+   return slices_1patch(varno, 0).integrate_volume(cctkGH,sum_reduction_handle);
 }
 
 extern "C" void SphericalIntegrator_CollectiveIntegration(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS
   DECLARE_CCTK_PARAMETERS
 
-  vector<CCTK_INT> vars[nslices];
-
-  // collect all vars and sort them to their sphere ID
-  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
-    // only integrate if it is wanted
-    if((slices_1patch(i,0).integrate_every() != 0)
-      && (cctk_iteration % slices_1patch(i,0).integrate_every() == 0))
-        vars[slices_1patch(i,0).ID()].push_back(i);
+  if(verbose > 0) {
+    CCTK_VInfo(CCTK_THORNSTRING,"Computing integrals (it=%i).",cctk_iteration);
   }
 
-  // start to integrate each var (on timelvl 0)
+  // get reduction handle for volume integration
+  const CCTK_INT sum_reduction_handle = CCTK_ReductionHandle("sum");
+  if(sum_reduction_handle < 0)
+      CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"SphericalIntegrator: Unable to get reduction handel 'sum'.");
+  // precompute delta volume
+  CCTK_REAL dx3 = cctk_delta_space[0]*cctk_delta_space[1]*cctk_delta_space[2];
+
+  vector<CCTK_INT> vol_vars;
+  // collect volume integration vars, to get tmp gf indices
   for(int i = 0; i<slices_1patch.slice().size(); ++i) {
-    if(cctk_iteration % slices_1patch(i,0).integrate_every() == 0) {
-      // try to get output scalar index, check if it is actually there
-      CCTK_INT output_index = CCTK_VarIndex(slices_1patch(i,0).outname().c_str());
-      if(output_index < 0)
-        CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
-                   "couldn't get index of output variable '%s'", slices_1patch(i, 0).outname().c_str());
-      // get the pointer to the output scalar
-      CCTK_REAL* result = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,output_index,NULL);
-      // integrate and store result
-      *result = slices_1patch(i, 0).integrate();
+    if(slices_1patch(i,0).integration_type() == volume) {
+      if(slices_1patch(i,0).has_constant_radius())
+        vol_vars.push_back(i);
+      else
+        CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Volume integrals over elliptical surfaces not supported yet. (sn = %i)",slices_1patch(i,0).ID());
     }
   }
+
+  // get GF index size to shift indices in GF arrays
+  const CCTK_INT gf_size = UTILS_GFSIZE(cctkGH);
+
+  // loop over all vars
+  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
+    // integrate only if it is necessary
+    if(cctk_iteration % slices_1patch(i,0).integrate_every() == 0) {
+      // integrate and store result
+      if(verbose > 1) {
+        CCTK_VInfo(CCTK_THORNSTRING,"Collective Integration: '%s' on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
+      }
+
+      if(slices_1patch(i,0).integration_type() == surface)
+        slices_1patch(i, 0).integrate_surface(cctkGH);
+      else {
+        slices_1patch(i,0).integrate_volume(cctkGH,sum_reduction_handle);
+      }
+    }
+    else {
+      if(verbose > 1)
+        CCTK_VInfo(CCTK_THORNSTRING,"Skipping integration of '%s' on sphere %i (it=%i).",slices_1patch(i,0).varname().c_str(),slices_1patch(i,0).ID(),cctk_iteration);
+    }
+  }
+
+
+
 }

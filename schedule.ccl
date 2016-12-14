@@ -5,6 +5,8 @@ STORAGE: ss_active
 STORAGE: ss_valid
 STORAGE: ss_info
 STORAGE: ss_radius_id
+STORAGE: ss_shape_descriptors
+STORAGE: ss_vol_integration_gfs
 
 SCHEDULE SphericalIntegrator_ParamCheck AT CCTK_PARAMCHECK
 {
@@ -12,16 +14,11 @@ SCHEDULE SphericalIntegrator_ParamCheck AT CCTK_PARAMCHECK
   OPTIONS: GLOBAL
 } "Check parameter settings"
 
-
-# I cannot schedule this at BASEGRID because this routine must be called only at
-# at the very beginning of the simulation and not during recovery.
-SCHEDULE SphericalIntegrator_Setup AT INITIAL #BASEGRID
+SCHEDULE SphericalIntegrator_Setup AT INITIAL
 {
   LANG: C
   OPTIONS: GLOBAL
 } "Set up slices"
-
-
 
 SCHEDULE SphericalIntegrator_PostSetup AT INITIAL AFTER SphericalIntegrator_Setup  #BASEGRID AFTER SphericalIntegrator_Setup
 {
@@ -29,40 +26,49 @@ SCHEDULE SphericalIntegrator_PostSetup AT INITIAL AFTER SphericalIntegrator_Setu
   OPTIONS: GLOBAL
 } "Post setup."
 
-
 SCHEDULE SphericalIntegrator_PostSetup AT POST_RECOVER_VARIABLES BEFORE MoL_PostStep
 {
   LANG: C
   OPTIONS: GLOBAL
 } "Post setup."
 
+########################################################################
+## Call integration register routines from other thorns in this group ##
+######################################################################## 
+SCHEDULE GROUP SphericalIntegrator_Register AT INITIAL AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
+{
+} "Group for register in other thorns."
+
+SCHEDULE GROUP SphericalIntegrator_Register AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE SphericalIntegrator_UpdateSpheres
+{
+} "Group for register in other thorns."
 
 
+# Update of spheres, e.g. moving origin, update radius etc
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT INITIAL AFTER SphericalIntegrator_Register
+{
+} "Set the spherical slices before this group and use them afterwards"
 
-
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT INITIAL AFTER SphericalIntegrator_PostSetup
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_Register BEFORE MoL_PostStep
 {
 } "Set the spherical slices before this group and use them afterwards"
 
 
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POST_RECOVER_VARIABLES AFTER SphericalIntegrator_PostSetup BEFORE MoL_PostStep
+SCHEDULE GROUP SphericalIntegrator_UpdateSpheres AT POSTSTEP
 {
 } "Set the spherical slices before this group and use them afterwards"
 
-
-SCHEDULE GROUP SphericalIntegrator_HasBeenSet AT POSTSTEP
-{
-} "Set the spherical slices before this group and use them afterwards"
-
-SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_HasBeenSet
+SCHEDULE SphericalIntegrator_CheckAndUpdate IN SphericalIntegrator_UpdateSpheres
 {
   LANG: C
   OPTIONS: GLOBAL
 } "Check ss_info variables if those have been externally set and adapt internal variables accordingly."
 
+###################################################
+## The actual interpolation/integration schedule ##
+###################################################
 
-# The actual interpolation/integration schedule
-SCHEDULE GROUP SphericalIntegrator_Calculations AT POSTSTEP AFTER SphericalIntegrator_HasBeenSet
+SCHEDULE GROUP SphericalIntegrator_Calculations AT POSTSTEP AFTER SphericalIntegrator_UpdateSpheres
 {
 } "Interpolation and integration schedule group."
 
@@ -70,17 +76,27 @@ SCHEDULE GROUP SphericalIntegrator_UpdateGFs IN SphericalIntegrator_Calculations
 {
 } "Thorns using the integrator should schedule their point-wise GF update/calculations in this group."
 
-SCHEDULE SphericalIntegrator_CollectiveInterpolation IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_UpdateGFs
+SCHEDULE GROUP SphericalIntegrator_Sync IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_UpdateGFs
+{
+} "Sync group"
+
+SCHEDULE SphericalIntegrator_CollectiveInterpolation IN SphericalIntegrator_Sync
 {
   LANG: C
   OPTIONS: GLOBAL
-} "Syncs (interpolates) all registered GFs to the given spheres."
+} "Syncs (interpolates) all registered GFs on the given spheres (for surface integrals)."
 
-SCHEDULE GROUP SphericalIntegrator_HasBeenInterpolated IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_CollectiveInterpolation
+SCHEDULE SphericalIntegrator_CollectiveVolumeSync IN SphericalIntegrator_Sync
 {
-} "Thorns relying on interpolated GFs should schedule their calculations here."
+  LANG: C
+  OPTIONS: LOCAL
+} "Syncs alls registered GFs in the given spheres (for volume integrals)."
 
-SCHEDULE SphericalIntegrator_CollectiveIntegration IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_HasBeenInterpolated
+SCHEDULE GROUP SphericalIntegrator_HasBeenSynced IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_Sync
+{
+} "Thorns relying on interpolated/synced GFs should schedule their calculations here."
+
+SCHEDULE SphericalIntegrator_CollectiveIntegration IN SphericalIntegrator_Calculations AFTER SphericalIntegrator_HasBeenSynced
 {
   LANG: C
   OPTIONS: GLOBAL

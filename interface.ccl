@@ -2,9 +2,10 @@
 
 USES INCLUDE: vect.hh
 USES INCLUDE: carpetinterp2.hh
+USES INCLUDE: utils.hh
 
 implements: SphericalIntegrator
-inherits: grid
+inherits: Grid ADMBase
 
 INCLUDE HEADER: slices.hh in spherical_slices.hh
 INCLUDE HEADER: IO/io_hdf5.h in io_hdf5.h
@@ -12,11 +13,10 @@ INCLUDE HEADER: IO/io_hdf5.h in io_hdf5.h
 PUBLIC:
 
 
-# Register a Cactus variable for being sliced and return registration number
+# Register a Cactus variable for surface/volume integration and return registration number.
 # Parameters are name of the grid function (varname), 
 # name of the scalar where the result should be stored (outname),
 # sphereid of the sphere over which will be integrated (sn),
-# number of timelevels to keep on the sphere (timelevels),
 # how often should be integrated (integrate_every),
 # how often should be interpolated (interpolate_every),
 # and the distribution method of the sphere data (distrib_method)
@@ -30,30 +30,65 @@ PUBLIC:
 # Integration is done automatically by the IntegrateCollectively routine.
 
 CCTK_INT FUNCTION \
-    SphericalIntegrator_RegisterVariable(CCTK_POINTER_TO_CONST IN varname, \
-                                         CCTK_POINTER_TO_CONST IN outname, \
-                                         CCTK_INT IN sn, \
-                                         CCTK_INT IN timelevels, \
-                                         CCTK_INT IN integrate_every, \
-                                         CCTK_INT IN interpolate_every, \
-                                         CCTK_POINTER_TO_CONST IN distrib_method)
-PROVIDES FUNCTION SphericalIntegrator_RegisterVariable \
-    WITH SphericalIntegrator_Register \
+    SphericalIntegrator_RegisterSurfaceIntegral(CCTK_POINTER_TO_CONST IN varname, \
+                                                CCTK_POINTER_TO_CONST IN outname, \
+                                                CCTK_INT IN sn, \
+                                                CCTK_INT IN integrate_every, \
+                                                CCTK_INT IN interpolate_every, \
+                                                CCTK_POINTER_TO_CONST IN distrib_method)
+PROVIDES FUNCTION SphericalIntegrator_RegisterSurfaceIntegral \
+    WITH SphericalIntegrator_RegisterSurfaceVar \
+    LANGUAGE C
+
+CCTK_INT FUNCTION \
+    SphericalIntegrator_RegisterVolumeIntegral(CCTK_POINTER_TO_CONST IN varname, \
+                                               CCTK_POINTER_TO_CONST IN outname, \
+                                               CCTK_INT IN sn, \
+                                               CCTK_INT IN integrate_every)
+PROVIDES FUNCTION SphericalIntegrator_RegisterVolumeIntegral \
+    WITH SphericalIntegrator_RegisterVolumeVar \
     LANGUAGE C
 
 
-## Following functions are only needed for manual integration/sync etc.
 
-# Return Surface-Integral over sliced variable. 
+##########################################################################
+## Following functions are only needed for manual integration/sync etc. ##
+##########################################################################
+
+# Return Surface-Integral over registered variable. 
 CCTK_REAL FUNCTION \
-    SphericalIntegrator_IntegrateVariable \
-         (CCTK_INT IN varno, \
-	  CCTK_INT IN timelevel)
-PROVIDES FUNCTION SphericalIntegrator_IntegrateVariable \
-    WITH SphericalIntegrator_Integrate \
+    SphericalIntegrator_IntegrateSurfaceVariable(CCTK_POINTER_TO_CONST IN cctkGH_, CCTK_INT IN varno)
+PROVIDES FUNCTION SphericalIntegrator_IntegrateSurfaceVariable \
+    WITH SphericalIntegrator_SurfaceIntegrate \
+    LANGUAGE C
+
+# Return Volume-Integral over registered variable.
+CCTK_REAL FUNCTION \
+    SphericalIntegrator_IntegrateVolumeVariable(CCTK_POINTER_TO_CONST IN cctkGH_, CCTK_INT IN varno)
+PROVIDES FUNCTION SphericalIntegrator_IntegrateVolumeVariable \
+    WITH SphericalIntegrator_VolumeIntegrate \
     LANGUAGE C
 
 
+# Synchronzie slice, i.e. interpolate ONE var onto sphere
+CCTK_INT FUNCTION \
+    SphericalIntegrator_SyncSurfaceVariable(CCTK_POINTER_TO_CONST IN cctkGH_, \
+	                                          CCTK_INT IN varno)
+PROVIDES FUNCTION SphericalIntegrator_SyncSurfaceVariable \
+    WITH SphericalIntegrator_SurfaceSync \
+    LANGUAGE C
+
+
+# Synchronzie surface slices, i.e. interpolate a whole set of variables on the same slice
+CCTK_INT FUNCTION \
+    SphericalIntegrator_CollectiveSyncSurfaceVariables(CCTK_POINTER_TO_CONST IN cctkGH_, \
+	                                                     CCTK_POINTER_TO_CONST IN varno, \
+	                                                     CCTK_INT IN number_of_vars)
+PROVIDES FUNCTION SphericalIntegrator_CollectiveSyncSurfaceVariables \
+    WITH SphericalIntegrator_CollectiveSurfaceSync \
+    LANGUAGE C
+
+### Ylm decompositions maybe broken, needs testing
 
 # Return value of scalar product with spin-weighted spherical harmonics sYlm 
 CCTK_COMPLEX FUNCTION \
@@ -80,30 +115,6 @@ CCTK_INT FUNCTION \
 PROVIDES FUNCTION SphericalIntegrator_ContractVariableWithAllsYlm \
     WITH SphericalIntegrator_ContractWithAllsYlm \
     LANGUAGE C
-
-
-
-# Synchronzie slice, i.e. interpolate onto sphere
-CCTK_INT FUNCTION \
-    SphericalIntegrator_SyncVariable \
-         (CCTK_POINTER_TO_CONST IN cctkGH_, \
-	  CCTK_INT IN varno)
-PROVIDES FUNCTION SphericalIntegrator_SyncVariable \
-    WITH SphericalIntegrator_Sync \
-    LANGUAGE C
-
-
-# Synchronzie slice, i.e. interpolate a whole set of variables on the same slice
-CCTK_INT FUNCTION \
-    SphericalIntegrator_CollectiveSyncVariables \
-         (CCTK_POINTER_TO_CONST IN cctkGH_, \
-	  CCTK_POINTER_TO_CONST IN varno, \
-	  CCTK_INT IN number_of_vars)
-PROVIDES FUNCTION SphericalIntegrator_CollectiveSyncVariables \
-    WITH SphericalIntegrator_CollectiveSync \
-    LANGUAGE C
-
-
 
 
 # To be defined by the setting thorn.
@@ -168,3 +179,11 @@ CCTK_INT ss_shape_descriptors[nslices] TYPE=scalar
 {
   ss_ntheta, ss_nphi, ss_npatches
 } "The shape of the surfaces, ie. number of points per patch and number of patches"
+
+PROTECTED:
+
+CCTK_REAL ss_vol_integration_gfs[max_volume_integrals] type=GF timelevels=1 tags='checkpoint="no" prolongation="none" InterpNumTimelevels=1'
+{
+  ss_tmp_volume_gfs
+} "Temporary integration GFs, set to zero outside sphere (r > ss_radius)"
+

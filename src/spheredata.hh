@@ -57,10 +57,16 @@ extern int interpolator_order;
 static const CCTK_REAL PI = 4.0*atan(1.0);
 
 
-// distribution method: constant: all processors conatin all the data
-//                      split:    the sphere is split across multiple processors
-//                      single:   only one processor contains the sphere
-enum distrib_method_t { constant, split, single, undefined };
+// distribution method: constant:           all processors hold all the data
+//                      split:              the data is split across multiple processors
+//                      single:             only one processor holds all the data
+//                      undefined_distrib:  not defined
+enum distrib_method_t { constant, split, single, undefined_distrib };
+
+// integration type:    volume:              volume integral in sphere
+//                      surface:             surface integral on sphere
+//                      undefined_integral:  not defined
+enum integration_t { volume, surface, undefined_integral };
 
 
 /// conversion to C++ vector
@@ -119,7 +125,9 @@ class spheredata
                        const vect<bool, 3>& symmetry_,
                        const int integrate_every_,
                        const int interpolate_every_,
+                       const integration_t integration_type_,
                        const distrib_method_t distrib_method_,
+                       const int internal_gf_index_,
                        const vector<int>& processors_)
                : _varname(varname_), _outname(outname_), _id(id_), _name(varname_),
                  _ntheta(ntheta_+2*nghosts_), _nphi(nphi_+2*nghosts_), _nghosts(nghosts_),
@@ -128,7 +136,9 @@ class spheredata
                  _symmetry(symmetry_),
                  _integrate_every(integrate_every_),
                  _interpolate_every(interpolate_every_),
+                 _integration_type(integration_type_),
                  _distrib_method(distrib_method_),
+                 _internal_gf_index(internal_gf_index_),
                  _processors(processors_)
             {
                stringstream str;
@@ -287,11 +297,29 @@ class spheredata
             /// returns the original name of the Cactus scalar that gets the integration result
             string outname() const { return _outname; }
 
+            /// returns pointer to output variable, defined by outname()
+            CCTK_REAL* outpointer(const cGH* const cctkGH) const {
+              // try to get output scalar index, check if it is actually there
+              CCTK_INT output_index = CCTK_VarIndex(this->outname().c_str());
+              if(output_index < 0)
+                CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+                           "Couldn't get index of output variable '%s' for '%s' on sphere %i",
+                           this->outname().c_str(),
+                           this->varname().c_str(),
+                           this->ID());
+              // get the pointer to the output scalar
+              return (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,output_index,NULL);
+
+            }
+
             /// returns integration iteration number
             int integrate_every() const { return _integrate_every; }
 
             /// returns interpolation iteration number
             int interpolate_every() const { return _interpolate_every; }
+
+            /// returns internal gf index, for volume integrals
+            int internal_gf_index() const { return _internal_gf_index; }
 
             /// returns the ID of the slice == n-th spherical slice in parfile
             int ID() const { return _id; }
@@ -301,6 +329,9 @@ class spheredata
 
             /// returns the distribution method
             distrib_method_t distrib_method() const { return _distrib_method; }
+
+            /// returns the integration type
+            integration_t integration_type() const { return _integration_type; }
 
             /// a group of processors that carry parts of the slice
             vector<int> processors() const { return _processors; }
@@ -392,6 +423,9 @@ class spheredata
             /// the distribution method
             distrib_method_t _distrib_method;
 
+            /// the integration type
+            integration_t _integration_type;
+
             ///...and the corresponding process that carries the data
             int _proc_id;
 
@@ -412,6 +446,9 @@ class spheredata
 
             /// how often should the GF be interpolated?
             int _interpolate_every;
+
+            /// index of the internal gf, used for volume integration
+            int _internal_gf_index;
 
             /// a constant radius
             CCTK_REAL _radius;

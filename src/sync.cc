@@ -26,11 +26,13 @@ along with Llama.  If not, see <http://www.gnu.org/licenses/>. */
 #include "setup.hh"
 #include "carpet.hh"
 
+#include <cmath>
+
 using namespace SPI;
 
 
 
-extern "C" CCTK_INT SphericalIntegrator_Sync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
+extern "C" CCTK_INT SphericalIntegrator_SurfaceSync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_INT varno)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -48,9 +50,7 @@ extern "C" CCTK_INT SphericalIntegrator_Sync(const CCTK_POINTER_TO_CONST cctkGH_
    return 0;
 }
 
-
-
-extern "C" CCTK_INT SphericalIntegrator_CollectiveSync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_POINTER_TO_CONST varno_, const CCTK_INT number_of_vars)
+extern "C" CCTK_INT SphericalIntegrator_CollectiveSurfaceSync(const CCTK_POINTER_TO_CONST cctkGH_, const CCTK_POINTER_TO_CONST varno_, const CCTK_INT number_of_vars)
 {
    DECLARE_CCTK_PARAMETERS
 
@@ -247,12 +247,25 @@ extern "C" void SphericalIntegrator_CollectiveInterpolation(CCTK_ARGUMENTS) {
 
   vector<CCTK_INT> vars[nslices];
 
+  if(verbose > 0)
+    CCTK_VInfo(CCTK_THORNSTRING,"Interpolating surface variables to spheres (it=%i).",cctk_iteration);
+
+  bool empty = true;
   // collect all vars and sort them to their sphere ID
   for(int i = 0; i<slices_1patch.slice().size(); ++i) {
     // only interpolate if it is wanted
     if((slices_1patch(i,0).interpolate_every() != 0)
-      && (cctk_iteration % slices_1patch(i,0).interpolate_every() == 0))
-        vars[slices_1patch(i,0).ID()].push_back(i);
+      && (cctk_iteration % slices_1patch(i,0).interpolate_every() == 0)) {
+      vars[slices_1patch(i,0).ID()].push_back(i);
+      empty = false;
+    }
+  }
+
+  // stop, if nothing is interpolated this iteration
+  if(empty) {
+    if(verbose > 0)
+      CCTK_VInfo(CCTK_THORNSTRING,"Nothing to interpolate in this iteration (it=%i).",cctk_iteration);
+    return;
   }
 
   // sync collectively vars on each sphere
@@ -261,7 +274,87 @@ extern "C" void SphericalIntegrator_CollectiveInterpolation(CCTK_ARGUMENTS) {
     // (standard guarantees that vector is stored contiguously in memory)
     CCTK_INT* vars_ptr = &vars[i][0];
     // sync checks that all vars on the same sphere
-    SphericalIntegrator_CollectiveSync(cctkGH,vars_ptr,vars[i].size());
+    SphericalIntegrator_CollectiveSurfaceSync(cctkGH,vars_ptr,vars[i].size());
+  }
+}
+
+extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS
+  DECLARE_CCTK_PARAMETERS
+
+  if(verbose > 0)
+    CCTK_VInfo(CCTK_THORNSTRING,"Syncing volume variables to internal GFs and mask by spheres (it=%i).",cctk_iteration);
+
+  // vector of volume integrated vars
+  vector<CCTK_INT> vol_vars;
+
+  // collect volume integration vars
+  for(int i = 0; i<slices_1patch.slice().size(); ++i) {
+    if((slices_1patch(i,0).integration_type() == volume)
+        && (slices_1patch(i,0).integrate_every() != 0)
+        && (cctk_iteration % slices_1patch(i,0).integrate_every() == 0)) {
+      if(slices_1patch(i,0).has_constant_radius())
+        vol_vars.push_back(i);
+      else
+        CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Volume integrals over elliptical surfaces not supported yet. (sn = %i)",slices_1patch(i,0).ID());
+    }
+  }
+  // stop, if nothing is integrated this iteration
+  if(vol_vars.size() == 0) {
+    if(verbose > 0)
+      CCTK_VInfo(CCTK_THORNSTRING,"Nothing to sync in this iteration (it=%i).",cctk_iteration);
+    return;
   }
 
+  // check if enough tmp GFs are available
+  if(vol_vars.size() > max_volume_integrals)
+    CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,"Please increase max_volume_integrals parameter to at least %lu", vol_vars.size());
+
+  // get index size of GFs
+  const CCTK_INT gf_size = UTILS_GFSIZE(cctkGH);
+
+  // vector of pointers to the actual and temporary GFs
+  vector<CCTK_REAL*> vol_vars_pointers(vol_vars.size(),NULL);
+  vector<CCTK_REAL*> vol_vars_tmp_pointers(vol_vars.size(),NULL);
+
+  for(int i = 0; i<vol_vars.size(); ++i) {
+    // get pointer to internal tmp gf
+    CCTK_REAL* tmp_gf_pointer = &ss_tmp_volume_gfs[slices_1patch(vol_vars[i],0).internal_gf_index()*gf_size];
+    // store in vector for loop below
+    vol_vars_tmp_pointers[i] = tmp_gf_pointer;
+
+    // get pointer to actual GF
+    CCTK_INT gf_index = CCTK_VarIndex(slices_1patch(vol_vars[i],0).varname().c_str());
+    if(gf_index < 0)
+      CCTK_VWarn(CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+                  "couldn't get index of variable '%s'", slices_1patch(vol_vars[i], 0).varname().c_str());
+    CCTK_REAL* gf_pointer = (CCTK_REAL*) CCTK_VarDataPtrB(cctkGH,0,gf_index,NULL);
+    // store it in vector for loop below
+    vol_vars_pointers[i] = gf_pointer;
+  }
+
+  #pragma omp parallel for schedule(static)
+  for(int ijk = 0; ijk < cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]; ++ijk) {
+    // compute det(metric) for volume element
+    CCTK_REAL dV = std::sqrt(utils::metric::spatial_det(gxx[ijk],
+                                                        gxy[ijk],
+                                                        gxz[ijk],
+                                                        gyy[ijk],
+                                                        gyz[ijk],
+                                                        gzz[ijk]));
+    for(int i = 0; i<vol_vars.size(); ++i) {
+      // calculate (coordinate) distance from sphere origin
+      CCTK_REAL x_dist = x[ijk]-slices_1patch(vol_vars[i],0).origin()[0];
+      CCTK_REAL y_dist = y[ijk]-slices_1patch(vol_vars[i],0).origin()[1];
+      CCTK_REAL z_dist = z[ijk]-slices_1patch(vol_vars[i],0).origin()[2];
+      CCTK_REAL distance = std::sqrt(x_dist*x_dist + y_dist*y_dist + z_dist*z_dist);
+
+      // set to zero outside of the sphere
+      if((distance <= slices_1patch(vol_vars[i],0).radius())
+          || (slices_1patch(vol_vars[i],0).radius() == 0))
+        vol_vars_tmp_pointers[i][ijk] = dV*vol_vars_pointers[i][ijk];
+      else
+        vol_vars_tmp_pointers[i][ijk] = 0.0;
+    }
+  }
 }
