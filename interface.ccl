@@ -134,6 +134,14 @@ CCTK_INT ss_valid[nslices] TYPE=scalar
 # radius function
 CCTK_INT ss_radius_id[nslices] TYPE=scalar
 
+# tracking index
+# 0: disabled
+# 1: star 1
+# 2: star 2
+# 3: star 1 md
+# 4: star 2 md
+CCTK_INT ss_track[nslices] TYPE=scalar
+
 
 CCTK_REAL ss_info[nslices] TYPE=scalar
 {
@@ -170,14 +178,6 @@ CCTK_REAL ss_info[nslices] TYPE=scalar
   ss_min_x ss_min_y ss_min_z ss_max_x ss_max_y ss_max_z
   
   ss_origin_x ss_origin_y ss_origin_z
-
-  # tracking index
-  # 0: disabled
-  # 1: star 1
-  # 2: star 2
-  # 3: star 1 md
-  # 4: star 2 md
-  ss_track
 } "Surface information"
 
 
