@@ -87,7 +87,7 @@ extern "C" void SphericalIntegrator_CheckAndUpdate(CCTK_ARGUMENTS)
       for(int i = 0; i<nslices; ++i) {
          switch(ss_track[i]) {
             case 0: {
-              // do nothing, no updated wanted
+              // do nothing, no update wanted
               break;
             }
             case 1: {
