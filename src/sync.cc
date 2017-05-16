@@ -335,6 +335,8 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
 
   #pragma omp parallel for schedule(static)
   for(int ijk = 0; ijk < cctk_lsh[0]*cctk_lsh[1]*cctk_lsh[2]; ++ijk) {
+    /* We decided to NOT include the jacobian here, since it leads to confusion
+       Please incorporate it into the registered GF
     // compute det(metric) for volume element
     CCTK_REAL dV = std::sqrt(utils::metric::spatial_det(gxx[ijk],
                                                         gxy[ijk],
@@ -342,6 +344,7 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
                                                         gyy[ijk],
                                                         gyz[ijk],
                                                         gzz[ijk]));
+    */
     for(int i = 0; i<vol_vars.size(); ++i) {
       // calculate (coordinate) distance from sphere origin
       CCTK_REAL x_dist = x[ijk]-slices_1patch(vol_vars[i],0).origin()[0];
@@ -351,10 +354,13 @@ extern "C" void SphericalIntegrator_CollectiveVolumeSync(CCTK_ARGUMENTS) {
 
       // set to zero outside of the sphere
       if((distance <= slices_1patch(vol_vars[i],0).radius())
-          || (slices_1patch(vol_vars[i],0).radius() == 0))
-        vol_vars_tmp_pointers[i][ijk] = dV*vol_vars_pointers[i][ijk];
-      else
+          || (slices_1patch(vol_vars[i],0).radius() == 0)) {
+        //vol_vars_tmp_pointers[i][ijk] = dV*vol_vars_pointers[i][ijk];
+        vol_vars_tmp_pointers[i][ijk] = vol_vars_pointers[i][ijk];
+      }
+      else {
         vol_vars_tmp_pointers[i][ijk] = 0.0;
+      }
     }
   }
 }
