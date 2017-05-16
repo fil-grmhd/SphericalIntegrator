@@ -3,7 +3,7 @@
 
 RESTRICTED:
 
-CCTK_INT verbose "How verbose should the output be?"
+CCTK_INT verbose "How verbose should the output be?" STEERABLE=ALWAYS
 {
   0:2 :: "Multiple lvls of verbosity"
 } 0
@@ -114,6 +114,6 @@ CCTK_INT max_volume_integrals "Maximum number of volume integrals (in total)" ST
   1:* :: "number of GFs"   
 } 20
 
-BOOLEAN use_carpet_interp1 "use carpet interp1 if you need proper accounting of symmetries and/or time interpolation"
+BOOLEAN use_carpet_interp1 "use carpet interp1 if you need proper accounting of symmetries and/or time interpolation" STEERABLE=ALWAYS
 {
 } no
